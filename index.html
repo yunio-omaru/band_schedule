@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>逆襲乙女バンド運営用スケジュール</title>
+    <style>
+        :root {
+            --primary-color: #6b8e23;
+            --category-bg: #ffff00; /* 大分類の黄色 */
+            --bg-color: #f7f9fa;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --border-color: #ccc;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        h1 { font-size: 1.5rem; color: #333; margin: 0; }
+        
+        /* ボタン共通 */
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn-main { background-color: #444; color: white; }
+        .btn-main:hover { background-color: #222; }
+        .btn-sub { background-color: #e0e0e0; color: #333; }
+        .btn-sub:hover { background-color: #d0d0d0; }
+
+        /* WBSテーブルコンテナ */
+        .wbs-container {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            overflow-x: auto; /* 横スクロール対応 */
+        }
+        .wbs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        /* WBSテーブルスタイル */
+        table.wbs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            min-width: 800px;
+        }
+        table.wbs-table th, table.wbs-table td {
+            border: 1px solid var(--border-color);
+            padding: 6px;
+            text-align: center;
+            height: 24px;
+        }
+        table.wbs-table th { background: #f2f2f2; font-weight: normal; }
+        table.wbs-table .col-main { width: 100px; text-align: left; font-weight: bold; }
+        table.wbs-table .col-sub { width: 120px; text-align: left; }
+        
+        /* 大分類の行スタイル */
+        table.wbs-table tr.category-row td {
+            background-color: var(--category-bg);
+            font-weight: bold;
+            text-align: left;
+        }
+
+        /* 日付マスのスタイル */
+        table.wbs-table td.cell-day {
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-width: 60px;
+        }
+        table.wbs-table td.cell-day:hover { background: #f0f7e6; }
+        table.wbs-table td.cell-day.has-event { background: #e6f2ff; color: #0066cc; }
+
+        /* モーダル・ポップアップ */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-card {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .modal-card h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 2px solid #444; padding-bottom: 8px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 4px; color: #555; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem;
+        }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        
+        .info-value { background: #f9f9f9; padding: 8px; border-radius: 4px; border: 1px solid #eee; min-height: 1.2rem; white-space: pre-wrap;}
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🎸 逆襲乙女バンド運営スケジュール</h1>
+        <button id="btn-open-menu" class="btn-main">編集メニュー</button>
+    </header>
+
+    <div class="wbs-container">
+        <div class="wbs-header">
+            <button id="btn-prev-month" class="btn-sub">◀ 前月</button>
+            <span id="current-month-label" style="font-weight: bold; font-size: 1.1rem;"></span>
+            <button id="btn-next-month" class="btn-sub">次月 ▶</button>
+        </div>
+        <table class="wbs-table">
+            <thead>
+                <tr id="table-header-days">
+                    </tr>
+            </thead>
+            <tbody id="wbs-tbody">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="modal-menu" class="modal-overlay hidden">
+    <div class="modal-card">
+        <h2>メインメニュー編集（分類登録）</h2>
+        <form id="form-category">
+            <div class="form-group">
+                <label>大分類名（例: イベント、楽曲制作、SNS）</label>
+                <input type="text" id="input-main-cat" placeholder="新しく登録する大分類名を入力" required>
+            </div>
+            <div class="form-group">
+                <label>小分類名（例: ライブ、スタジオ、MEET、abelia）</label>
+                <input type="text" id="input-sub-cat" placeholder="大分類に紐付ける小分類名を入力" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" id="btn-close-menu" class="btn-sub">閉じる</button>
+                <button type="submit" class="btn-main">分類設定後登録</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-detail" class="modal-overlay hidden">
+    <div class="modal-card">
+        <h2>詳細画面</h2>
+        <div class="form-group">
+            <label>日付</label>
+            <div id="view-date" class="info-value"></div>
+        </div>
+        <div class="form-group">
+            <label>分類</label>
+            <div id="view-category" class="info-value"></div>
+        </div>
+        <div class="form-group">
+            <label>場所</label>
+            <div id="view-location" class="info-value"></div>
+        </div>
+        <div class="form-group">
+            <label>楽曲</label>
+            <div id="view-song" class="info-value"></div>
+        </div>
+        <div class="form-group">
+            <label>内容</label>
+            <div id="view-content" class="info-value"></div>
+        </div>
+        <div class="modal-actions">
+            <button type="button" id="btn-close-detail" class="btn-sub">閉じる</button>
+            <button type="button" id="btn-go-edit" class="btn-main">左上の編集</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-edit" class="modal-overlay hidden">
+    <div class="modal-card">
+        <h2>編集画面</h2>
+        <form id="form-schedule">
+            <div class="form-group">
+                <label>日付</label>
+                <div id="edit-date-label" style="font-weight: bold; margin-bottom: 5px;"></div>
+            </div>
+            <div class="form-group">
+                <label>分類</label>
+                <div id="edit-category-label" style="font-weight: bold; color: #666; margin-bottom: 5px;"></div>
+            </div>
+            <div class="form-group">
+                <label>場所</label>
+                <input type="text" id="input-location" placeholder="手動で記載">
+            </div>
+            <div class="form-group">
+                <label>楽曲</label>
+                <input type="text" id="input-song" placeholder="手動で記載">
+            </div>
+            <div class="form-group">
+                <label>内容</label>
+                <textarea id="input-content" rows="3" placeholder="手動で記載"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" id="btn-cancel-edit" class="btn-sub">キャンセル</button>
+                <button type="submit" class="btn-main">保存する</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // --- 状態管理 ---
+    let currentDate = new Date(2026, 5, 1); // 初期表示：ご提示に合わせ2026年6月 (JavaScriptの月は0始まりなので5=6月)
+    
+    // 初期分類データ（登録が何も無い場合のデフォルト）
+    let categories = JSON.parse(localStorage.getItem('bandCategories')) || [
+        { main: 'イベント', subs: ['ライブ', 'スタジオ', 'MEET'] },
+        { main: '楽曲制作', subs: ['abelia', 'パラリラ', '爆裂アンチ'] },
+        { main: 'SNS', subs: ['告知', 'SNS動画'] }
+    ];
+
+    // スケジュール詳細データ管理
+    // キー構造例: "2026-06-03_イベント_スタジオ" -> { location: 'finesound', song: '超次元', content: '...' }
+    let schedules = JSON.parse(localStorage.getItem('bandSchedules')) || {
+        "2026-06-03_イベント_スタジオ": { location: "finesound", song: "", content: "" },
+        "2026-06-05_イベント_MEET": { location: "佐々木宅", song: "", content: "" },
+        "2026-06-07_イベント_ライブ": { location: "薬院refrex", song: "", content: "" },
+        "2026-06-15_イベント_ライブ": { location: "finesound", song: "超次元\nぶっちぎり", content: "通しチェック\nabeliaの楽曲チェック" },
+        "2026-06-01_SNS_SNS動画": { location: "rising hope\n超次元", song: "", content: "" }
+    };
+
+    // 現在選択中のセル情報ポインタ
+    let activeCellInfo = { dateStr: '', mainCat: '', subCat: '' };
+
+    // --- 初期化 ---
+    document.addEventListener('DOMContentLoaded', () => {
+        renderWBS();
+
+        // 月切り替え
+        document.getElementById('btn-prev-month').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderWBS(); });
+        document.getElementById('btn-next-month').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderWBS(); });
+
+        // モーダル開閉：分類編集メニュー
+        document.getElementById('btn-open-menu').addEventListener('click', () => document.getElementById('modal-menu').classList.remove('hidden'));
+        document.getElementById('btn-close-menu').addEventListener('click', () => document.getElementById('modal-menu').classList.add('hidden'));
+        document.getElementById('form-category').addEventListener('submit', handleCategorySubmit);
+
+        // モーダル開閉：詳細・編集
+        document.getElementById('btn-close-detail').addEventListener('click', () => document.getElementById('modal-detail').classList.add('hidden'));
+        document.getElementById('btn-go-edit').addEventListener('click', transitDetailToEdit);
+        document.getElementById('btn-cancel-edit').addEventListener('click', () => document.getElementById('modal-edit').classList.add('hidden'));
+        document.getElementById('form-schedule').addEventListener('submit', handleScheduleSubmit);
+    });
+
+    // --- WBSガントチャートの描画 ---
+    function renderWBS() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        document.getElementById('current-month-label').innerText = `${year}年${month + 1}月`;
+
+        const numDays = new Date(year, month + 1, 0).getDate(); // 月の総日数
+
+        // 1. ヘッダー（日付一覧）の生成
+        const headerRow = document.getElementById('table-header-days');
+        headerRow.innerHTML = `<th class="col-main">大分類</th><th class="col-sub">小分類</th>`;
+        for (let d = 1; d <= numDays; d++) {
+            const th = document.createElement('th');
+            th.innerText = d;
+            th.style.width = '40px';
+            headerRow.appendChild(th);
+        }
+
+        // 2. ボディ（データ行）の生成
+        const tbody = document.getElementById('wbs-tbody');
+        tbody.innerHTML = '';
+
+        categories.forEach(cat => {
+            // 大分類行の追加
+            const catRow = document.createElement('tr');
+            catRow.className = 'category-row';
+            catRow.innerHTML = `<td colspan="${numDays + 2}">${cat.main}</td>`;
+            tbody.appendChild(catRow);
+
+            // 小分類ごとの行追加
+            cat.subs.forEach(sub => {
+                const row = document.createElement('tr');
+                
+                // 左側の分類ラベル
+                const tdMainPlaceholder = document.createElement('td'); // 空白を埋める用
+                tdMainPlaceholder.className = 'col-main';
+                tdMainPlaceholder.style.background = '#fff';
+                
+                const tdSub = document.createElement('td');
+                tdSub.className = 'col-sub';
+                tdSub.innerText = sub;
+                
+                row.appendChild(tdMainPlaceholder);
+                row.appendChild(tdSub);
+
+                // 日付マスの追加
+                for (let d = 1; d <= numDays; d++) {
+                    const cell = document.createElement('td');
+                    cell.className = 'cell-day';
+                    
+                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    const scheduleKey = `${dateStr}_${cat.main}_${sub}`;
+                    
+                    // すでにデータ（場所など）が入っていればWBS上に文字を表示
+                    if (schedules[scheduleKey]) {
+                        cell.classList.add('has-event');
+                        // 画面上がごちゃつかないよう、場所(location)の1行目をセルに表示
+                        cell.innerText = schedules[scheduleKey].location.split('\n')[0];
+                    }
+
+                    // マスを押したときの詳細画面遷移
+                    cell.addEventListener('click', () => openDetailModal(dateStr, cat.main, sub));
+                    row.appendChild(cell);
+                }
+                tbody.appendChild(row);
+            });
+        });
+    }
+
+    // --- 分類登録（編集メニュー）の処理 ---
+    function handleCategorySubmit(e) {
+        e.preventDefault();
+        const mainCatInput = document.getElementById('input-main-cat').value.trim();
+        const subCatInput = document.getElementById('input-sub-cat').value.trim();
+
+        // 既存の大分類があるか探す
+        const targetCat = categories.find(c => c.main === mainCatInput);
+        if (targetCat) {
+            // 小分類が重複してなければ追加
+            if (!targetCat.subs.includes(subCatInput)) {
+                targetCat.subs.push(subCatInput);
+            }
+        } else {
+            // 新規大分類として追加
+            categories.push({ main: mainCatInput, subs: [subCatInput] });
+        }
+
+        localStorage.setItem('bandCategories', JSON.stringify(categories));
+        renderWBS();
+        
+        // フォームリセットして閉じる
+        document.getElementById('form-category').reset();
+        document.getElementById('modal-menu').classList.add('hidden');
+    }
+
+    // --- 詳細モーダルを開く ---
+    function openDetailModal(dateStr, mainCat, subCat) {
+        activeCellInfo = { dateStr, mainCat, subCat };
+        const scheduleKey = `${dateStr}_${mainCat}_${subCat}`;
+        const data = schedules[scheduleKey] || { location: '', song: '', content: '' };
+
+        // 閲覧用に値をマッピング
+        document.getElementById('view-date').innerText = dateStr.replace(/-/g, '/');
+        document.getElementById('view-category').innerText = `${mainCat} ＞ ${subCat}`;
+        document.getElementById('view-location').innerText = data.location || '記載なし';
+        document.getElementById('view-song').innerText = data.song || '記載なし';
+        document.getElementById('view-content').innerText = data.content || '記載なし';
+
+        document.getElementById('modal-detail').classList.remove('hidden');
+    }
+
+    // --- 詳細画面から編集画面への遷移（左上の編集ボタン押下） ---
+    function transitDetailToEdit() {
+        document.getElementById('modal-detail').classList.add('hidden');
+        
+        const { dateStr, mainCat, subCat } = activeCellInfo;
+        const scheduleKey = `${dateStr}_${mainCat}_${subCat}`;
+        const data = schedules[scheduleKey] || { location: '', song: '', content: '' };
+
+        // ラベル反映
+        document.getElementById('edit-date-label').innerText = dateStr.replace(/-/g, '/');
+        document.getElementById('edit-category-label').innerText = `${mainCat} ＞ ${subCat}`;
+
+        // 入力フォームに既存値をセット
+        document.getElementById('input-location').value = data.location;
+        document.getElementById('input-song').value = data.song;
+        document.getElementById('input-content').value = data.content;
+
+        document.getElementById('modal-edit').classList.remove('hidden');
+    }
+
+    // --- スケジュール編集データの保存 ---
+    function handleScheduleSubmit(e) {
+        e.preventDefault();
+        const { dateStr, mainCat, subCat } = activeCellInfo;
+        const scheduleKey = `${dateStr}_${mainCat}_${subCat}`;
+
+        const location = document.getElementById('input-location').value.trim();
+        const song = document.getElementById('input-song').value.trim();
+        const content = document.getElementById('input-content').value.trim();
+
+        // 何かしら入力があれば保存、空っぽならデータキーごと削除してWBSを綺麗に
+        if (location || song || content) {
+            schedules[scheduleKey] = { location, song, content };
+        } else {
+            delete schedules[scheduleKey];
+        }
+
+        localStorage.setItem('bandSchedules', JSON.stringify(schedules));
+        renderWBS();
+
+        document.getElementById('modal-edit').classList.add('hidden');
+    }
+</script>
+
+</body>
+</html>
