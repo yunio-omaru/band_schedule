@@ -120,7 +120,7 @@
             height: 38px;
         }
         table.wbs-table th { background: #f1f2f6; font-weight: bold; color: #57606f;}
-        table.wbs-table .col-main { width: 100px; text-align: left; font-weight: bold; }
+        table.wbs-table .col-main { width: 100px; text-align: left; font-weight: bold; background: #fafafa; }
         table.wbs-table .col-mid { width: 150px; text-align: left; font-weight: bold; color: #57606f; background: #fafafa; cursor: pointer; }
         table.wbs-table .col-mid:hover { background: #e0e0e0 !important; }
         
@@ -333,7 +333,7 @@
                 <label>日付</label>
                 <input type="date" id="input-edit-date" required>
             </div>
-            <div class="form-group" id="group-edit-cat-select">
+            <div class="form-group id="group-edit-cat-select" class="hidden">
                 <label>登録先の分類行を選択</label>
                 <select id="select-target-cat-path"></select>
             </div>
@@ -531,7 +531,8 @@
             cat.mids.forEach(mid => {
                 const row = document.createElement('tr');
                 const tdMainPlaceholder = document.createElement('td');
-                tdMainPlaceholder.className = 'col-main'; tdMainPlaceholder.style.background = '#fff';
+                tdMainPlaceholder.className = 'col-main'; 
+                tdMainPlaceholder.innerText = "✅"; // 最左部のクローズチェックマーク表示を復活
                 
                 const tdMid = document.createElement('td');
                 tdMid.className = 'col-mid'; tdMid.innerText = mid || '-';
@@ -738,7 +739,7 @@
             });
         });
 
-        // 📅 日付の初期値を設定
+        // 日付初期選択
         document.getElementById('input-edit-date').value = dateStr;
         
         document.getElementById('group-edit-cat-select').classList.remove('hidden');
@@ -759,7 +760,7 @@
         const scheduleKey = `${dateStr}_${mainCat}_${midCat}`;
         const data = schedules[scheduleKey] || { subCat: '', location: '', song: '', content: '' };
 
-        // 📅 日付インプットへ値を代入して変更可能にする
+        // 日付入力に現在の設定値を挿入
         document.getElementById('input-edit-date').value = dateStr;
         document.getElementById('edit-cat-path-label').innerText = `${mainCat} ＞ ${midCat}`;
         
@@ -780,7 +781,7 @@
         e.preventDefault();
         let { dateStr: originalDateStr, mainCat, midCat } = activeCellInfo;
         
-        // 📅 新しく設定された日付を取得
+        // 新しく選択された日付を取得
         const newDateStr = document.getElementById('input-edit-date').value;
 
         if (!document.getElementById('group-edit-cat-select').classList.contains('hidden')) {
@@ -796,7 +797,7 @@
         const song = document.getElementById('input-song').value.trim();
         const content = document.getElementById('input-content').value.trim();
 
-        // 📅 日付が変更されていた場合、元の古い日付のキーを完全に消去
+        // 日付が変更されていた場合は古い日程のキーを削除
         if (originalDateStr && originalDateStr !== newDateStr) {
             const oldKey = `${originalDateStr}_${mainCat}_${midCat}`;
             delete schedules[oldKey];
@@ -818,7 +819,6 @@
 
     function handleScheduleDelete() {
         if(!confirm("このマスの予定を削除しますか？")) return;
-        // 削除時は現在インプットボックスに入力されている日付ベースの予定を削除
         const targetDate = document.getElementById('input-edit-date').value || activeCellInfo.dateStr;
         const scheduleKey = `${targetDate}_${activeCellInfo.mainCat}_${activeCellInfo.midCat}`;
         delete schedules[scheduleKey];
@@ -845,14 +845,22 @@
         const { type, main, mid } = activeCatEditInfo;
         const oldSchedules = { ...schedules }; schedules = {};
 
+        // 正しく年-月-日のキー構造を崩さずにリネームできるように変更
         Object.keys(oldSchedules).forEach(key => {
-            const parts = key.split('_');
-            if(parts.length >= 3) {
-                let m = parts[1], d = parts[2];
+            const firstUnderscore = key.indexOf('_');
+            if (firstUnderscore !== -1) {
+                const datePart = key.substring(0, firstUnderscore);
+                const catPart = key.substring(firstUnderscore + 1);
+                const parts = catPart.split('_');
+                
+                let m = parts[0], d = parts[1] || '';
                 if(type === 'main' && m === main) m = newName;
                 if(type === 'mid' && m === main && d === mid) d = newName;
-                schedules[`${parts[0]}_${m}_${d}`] = oldSchedules[key];
-            } else { schedules[key] = oldSchedules[key]; }
+                
+                schedules[`${datePart}_${m}_${d}`] = oldSchedules[key];
+            } else {
+                schedules[key] = oldSchedules[key];
+            }
         });
 
         if(type === 'main') {
@@ -871,10 +879,12 @@
         if(!confirm("この行を丸ごと削除しますか？登録されていた予定データも同時にすべて消去されます。")) return;
 
         Object.keys(schedules).forEach(key => {
-            const parts = key.split('_');
-            if(parts.length >= 3) {
-                if(type === 'main' && parts[1] === main) delete schedules[key];
-                if(type === 'mid' && parts[1] === main && parts[2] === mid) delete schedules[key];
+            const firstUnderscore = key.indexOf('_');
+            if (firstUnderscore !== -1) {
+                const catPart = key.substring(firstUnderscore + 1);
+                const parts = catPart.split('_');
+                if(type === 'main' && parts[0] === main) delete schedules[key];
+                if(type === 'mid' && parts[0] === main && parts[1] === mid) delete schedules[key];
             }
         });
 
