@@ -59,6 +59,8 @@
         .btn-main:hover { background-color: #1e272e; border-color: #1e272e; }
         .btn-sub { background-color: #ffffff; color: #2f3640; border: 1px solid #dcdde1; }
         .btn-sub:hover { background-color: #f5f6fa; border-color: #c2c3c9; }
+        .btn-danger { background-color: #e74c3c; color: white; border: 1px solid #e74c3c; }
+        .btn-danger:hover { background-color: #c0392b; border-color: #c0392b; }
         .btn-sync { background-color: #27ae60; color: white; margin-right: 10px; }
         .btn-sync:hover { background-color: #219a52; }
 
@@ -101,13 +103,17 @@
             height: 38px;
         }
         table.wbs-table th { background: #f1f2f6; font-weight: bold; color: #57606f;}
-        table.wbs-table .col-main { width: 90px; text-align: left; font-weight: bold; }
-        table.wbs-table .col-mid { width: 90px; text-align: left; font-weight: bold; color: #57606f; background: #fafafa; }
-        table.wbs-table .col-sub { width: 110px; text-align: left; color: #2f3640; background: #fff; }
+        table.wbs-table .col-main { width: 90px; text-align: left; font-weight: bold; cursor: pointer; }
+        table.wbs-table .col-main:hover { background: #eee !important; }
+        table.wbs-table .col-mid { width: 90px; text-align: left; font-weight: bold; color: #57606f; background: #fafafa; cursor: pointer; }
+        table.wbs-table .col-mid:hover { background: #e0e0e0 !important; }
+        table.wbs-table .col-sub { width: 110px; text-align: left; color: #2f3640; background: #fff; cursor: pointer; }
+        table.wbs-table .col-sub:hover { background: #e0e0e0 !important; }
         
         table.wbs-table tr.category-row td {
-            font-weight: bold; text-align: left; font-size: 0.95rem; padding: 10px 15px; color: white; letter-spacing: 0.05em;
+            font-weight: bold; text-align: left; font-size: 0.95rem; padding: 10px 15px; color: white; letter-spacing: 0.05em; cursor: pointer;
         }
+        table.wbs-table tr.category-row td:hover { opacity: 0.85; text-decoration: underline; }
         table.wbs-table tr.category-event td { background-color: var(--bg-event-main); }
         table.wbs-table tr.category-music td { background-color: var(--bg-music-main); }
         table.wbs-table tr.category-sns td { background-color: var(--bg-sns-main); }
@@ -255,23 +261,41 @@
     </div>
 </div>
 
+<div id="modal-edit-category" class="modal-overlay hidden">
+    <div class="modal-card">
+        <h2>分類名の変更・削除</h2>
+        <form id="form-edit-cat-name">
+            <div class="form-group">
+                <label id="label-edit-cat-type">分類名</label>
+                <input type="text" id="input-edit-cat-name" required>
+            </div>
+            <div class="modal-actions" style="justify-content: space-between;">
+                <button type="button" id="btn-delete-cat" class="btn-danger">この行を削除</button>
+                <div>
+                    <button type="button" id="btn-cancel-cat-edit" class="btn-sub">キャンセル</button>
+                    <button type="submit" class="btn-main">変更を保存</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     // ⚠️【重要】ここにステップ1でコピーしたご自身のGoogle Apps Script(GAS)のURLを貼り付けてください！
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxv0ihYoz9jQNEZCuO_8-XgDCFOluRxyDWATD4gsWa7dGjMpI4KfCAx_R4JPqSHRQziSQ/exec";
+    const GAS_API_URL = "ここにさっきコピーしたGASのURLを貼り付ける";
 
     let currentDate = new Date(2026, 5, 1);
     let categories = [];
     let schedules = {};
     let activeCellInfo = { dateStr: '', mainCat: '', midCat: '', subCat: '' };
+    let activeCatEditInfo = { type: '', main: '', mid: '', sub: '' }; // 分類編集用
 
     document.addEventListener('DOMContentLoaded', () => {
-        // バックアップとしてローカルストレージからも一瞬読み込む
         categories = JSON.parse(localStorage.getItem('ss_categories')) || [];
         schedules = JSON.parse(localStorage.getItem('ss_schedules')) || {};
         renderWBS();
         updateFormInputs();
 
-        // 起動時に自動でスプレッドシートから最新データを取得
         loadFromSpreadsheet();
 
         document.getElementById('btn-prev-month').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderWBS(); });
@@ -294,6 +318,11 @@
         document.getElementById('btn-cancel-edit').addEventListener('click', () => document.getElementById('modal-edit').classList.add('hidden'));
         document.getElementById('form-schedule').addEventListener('submit', handleScheduleSubmit);
         document.getElementById('btn-cloud-load').addEventListener('click', loadFromSpreadsheet);
+
+        // 分類編集用イベント
+        document.getElementById('btn-cancel-cat-edit').addEventListener('click', () => document.getElementById('modal-edit-category').classList.add('hidden'));
+        document.getElementById('form-edit-cat-name').addEventListener('submit', handleCategoryNameUpdate);
+        document.getElementById('btn-delete-cat').addEventListener('click', handleCategoryDelete);
     });
 
     // --- スプレッドシートからデータを取得 (GET) ---
@@ -412,7 +441,11 @@
             else if (cat.main === 'SNS') catRow.classList.add('category-sns');
             else catRow.classList.add('category-default');
             
-            catRow.innerHTML = `<td colspan="${numDays + 3}">📢 ${cat.main}</td>`;
+            const catTd = document.createElement('td');
+            catTd.setAttribute('colspan', numDays + 3);
+            catTd.innerText = `📢 ${cat.main} (タップで編集)`;
+            catTd.addEventListener('click', () => openCategoryEditModal('main', cat.main));
+            catRow.appendChild(catTd);
             tbody.appendChild(catRow);
 
             cat.mids.forEach(midObj => {
@@ -423,9 +456,11 @@
                     
                     const tdMid = document.createElement('td');
                     tdMid.className = 'col-mid'; tdMid.innerText = midObj.mid || '-';
+                    tdMid.addEventListener('click', () => openCategoryEditModal('mid', cat.main, midObj.mid));
                     
                     const tdSub = document.createElement('td');
                     tdSub.className = 'col-sub'; tdSub.innerText = sub || '-';
+                    tdSub.addEventListener('click', () => openCategoryEditModal('sub', cat.main, midObj.mid, sub));
                     
                     row.appendChild(tdMainPlaceholder); row.appendChild(tdMid); row.appendChild(tdSub);
 
@@ -474,10 +509,130 @@
 
         localStorage.setItem('ss_categories', JSON.stringify(categories));
         renderWBS();
-        saveToSpreadsheet(); // スプシに即時保存
+        saveToSpreadsheet(); 
         
         document.getElementById('form-category').reset();
         document.getElementById('modal-menu').classList.add('hidden');
+    }
+
+    // --- 分類名編集モーダルを開く処理（追加） ---
+    function openCategoryEditModal(type, main, mid = '', sub = '') {
+        activeCatEditInfo = { type, main, mid, sub };
+        const label = document.getElementById('label-edit-cat-type');
+        const input = document.getElementById('input-edit-cat-name');
+
+        if(type === 'main') {
+            label.innerText = "大分類名の変更"; input.value = main;
+        } else if(type === 'mid') {
+            label.innerText = `中分類名の変更 (${main})`; input.value = mid;
+        } else if(type === 'sub') {
+            label.innerText = `小分類名の変更 (${main} ＞ ${mid})`; input.value = sub;
+        }
+
+        document.getElementById('modal-edit-category').classList.remove('hidden');
+    }
+
+    // --- 分類名の変更保存処理（追加） ---
+    function handleCategoryNameUpdate(e) {
+        e.preventDefault();
+        const newName = document.getElementById('input-edit-cat-name').value.trim();
+        if(!newName) return;
+
+        const { type, main, mid, sub } = activeCatEditInfo;
+
+        // 1. スケジュール(schedules)のデータキーの移行
+        const oldSchedules = { ...schedules };
+        schedules = {};
+        Object.keys(oldSchedules).forEach(key => {
+            // キーの構成: YYYY-MM-DD_大分類_中分類_小分類
+            const parts = key.split('_');
+            if(parts.length >= 4) {
+                const datePart = parts[0];
+                let m = parts[1], d = parts[2], s = parts[3];
+
+                if(type === 'main' && m === main) m = newName;
+                if(type === 'mid' && m === main && d === mid) d = newName;
+                if(type === 'sub' && m === main && d === mid && s === sub) s = newName;
+
+                const newKey = `${datePart}_${m}_${d}_${s}`;
+                schedules[newKey] = oldSchedules[key];
+            } else {
+                schedules[key] = oldSchedules[key];
+            }
+        });
+
+        // 2. 分類ツリー(categories)の書き換え
+        if(type === 'main') {
+            const cat = categories.find(c => c.main === main);
+            if(cat) cat.main = newName;
+        } else if(type === 'mid') {
+            const cat = categories.find(c => c.main === main);
+            if(cat) {
+                const mObj = cat.mids.find(m => m.mid === mid);
+                if(mObj) mObj.mid = newName;
+            }
+        } else if(type === 'sub') {
+            const cat = categories.find(c => c.main === main);
+            if(cat) {
+                const mObj = cat.mids.find(m => m.mid === mid);
+                if(mObj) {
+                    const idx = mObj.subs.indexOf(sub);
+                    if(idx !== -1) mObj.subs[idx] = newName;
+                }
+            }
+        }
+
+        localStorage.setItem('ss_categories', JSON.stringify(categories));
+        localStorage.setItem('ss_schedules', JSON.stringify(schedules));
+        renderWBS();
+        saveToSpreadsheet();
+
+        document.getElementById('modal-edit-category').classList.add('hidden');
+    }
+
+    // --- 行・分類の削除処理（追加） ---
+    function handleCategoryDelete() {
+        const { type, main, mid, sub } = activeCatEditInfo;
+        let confirmMsg = "この分類を削除しますか？紐づく予定データも削除されます。";
+        if(type === 'main') confirmMsg = `【警告】大分類「${main}」を削除すると、配下の中分類・小分類・予定がすべて消えます。本当によろしいですか？`;
+        
+        if(!confirm(confirmMsg)) return;
+
+        // 1. 該当するスケジュールデータの消去
+        Object.keys(schedules).forEach(key => {
+            const parts = key.split('_');
+            if(parts.length >= 4) {
+                const m = parts[1], d = parts[2], s = parts[3];
+                if(type === 'main' && m === main) delete schedules[key];
+                if(type === 'mid' && m === main && d === mid) delete schedules[key];
+                if(type === 'sub' && m === main && d === mid && s === sub) delete schedules[key];
+            }
+        });
+
+        // 2. 分類ツリーからの削除
+        if(type === 'main') {
+            categories = categories.filter(c => c.main !== main);
+        } else if(type === 'mid') {
+            const cat = categories.find(c => c.main === main);
+            if(cat) {
+                cat.mids = cat.mids.filter(m => m.mid !== mid);
+            }
+        } else if(type === 'sub') {
+            const cat = categories.find(c => c.main === main);
+            if(cat) {
+                const mObj = cat.mids.find(m => m.mid === mid);
+                if(mObj) {
+                    mObj.subs = mObj.subs.filter(s => s !== sub);
+                }
+            }
+        }
+
+        localStorage.setItem('ss_categories', JSON.stringify(categories));
+        localStorage.setItem('ss_schedules', JSON.stringify(schedules));
+        renderWBS();
+        saveToSpreadsheet();
+
+        document.getElementById('modal-edit-category').classList.add('hidden');
     }
 
     function openDetailModal(dateStr, mainCat, midCat, subCat) {
@@ -529,7 +684,7 @@
 
         localStorage.setItem('ss_schedules', JSON.stringify(schedules));
         renderWBS();
-        saveToSpreadsheet(); // スプシに即時保存
+        saveToSpreadsheet(); 
 
         document.getElementById('modal-edit').classList.add('hidden');
     }
