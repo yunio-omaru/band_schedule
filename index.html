@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- ======================================================== -->
-    <!-- 【バンド名変更エリア】                                    -->
-    <!-- 以下の <title> と <h1> の中身を書き換えることで変更可能です -->
-    <!-- ======================================================== -->
     <title>迎撃乙女バンド運営用スケジュール</title>
     
     <style>
@@ -16,19 +12,19 @@
             --bg-color: #f7f9fa;
             --card-bg: #ffffff;
             --text-color: #2c3e50;
-            --border-color: #dcdde1; /* 枠線を少し柔らかいグレーに */
+            --border-color: #dcdde1; 
             
-            /* イベント系（ライブ・スタジオ等）のテーマカラー：華やかなコーラルオレンジ */
+            /* イベント系（ライブ・スタジオ等）のテーマカラー：コーラルオレンジ */
             --bg-event-main: #ff7f50;
             --bg-event-cell: #fff5f0;
             --text-event-cell: #e65c00;
 
-            /* 楽曲制作系（リハ・制作等）のテーマカラー：落ち着いたアースグリーン */
+            /* 楽曲制作系（リハ・制作等）のテーマカラー：ミントグリーン */
             --bg-music-main: #2ec4b6;
             --bg-music-cell: #f0fdfa;
             --text-music-cell: #0f766e;
 
-            /* その他の分類が追加された場合のデフォルトカラー */
+            /* その他の分類が追加された場合のデフォルトカラー：グレー */
             --bg-default-main: #718093;
             --bg-default-cell: #f8f9fa;
             --text-default-cell: #2f3640;
@@ -101,7 +97,7 @@
         }
         table.wbs-table th, table.wbs-table td {
             border: 1px solid var(--border-color);
-            padding: 10px 4px; /* 上下余白を少し広げて見やすく */
+            padding: 10px 4px; 
             text-align: center;
             height: 38px;
         }
@@ -114,7 +110,7 @@
         table.wbs-table .col-mid { width: 90px; text-align: left; font-weight: bold; color: #57606f; background: #fafafa; }
         table.wbs-table .col-sub { width: 110px; text-align: left; color: #2f3640; background: #fff; }
         
-        /* ★【修正】大分類の行スタイル（動的にクラスが付与されます） */
+        /* 大分類の行スタイル */
         table.wbs-table tr.category-row td {
             font-weight: bold;
             text-align: left;
@@ -123,11 +119,8 @@
             color: white;
             letter-spacing: 0.05em;
         }
-        /* イベント用の帯（コーラル） */
         table.wbs-table tr.category-event td { background-color: var(--bg-event-main); }
-        /* 楽曲制作用の帯（ミントグリーン） */
         table.wbs-table tr.category-music td { background-color: var(--bg-music-main); }
-        /* その他が追加された場合の帯（グレー） */
         table.wbs-table tr.category-default td { background-color: var(--bg-default-main); }
 
         /* 日付マスのスタイル */
@@ -154,7 +147,7 @@
             border-radius: 4px;
         }
         
-        /* ★【修正】データがあるマスの色分け */
+        /* データがあるマスの色分け */
         table.wbs-table td.cell-day.has-event-live { 
             background: var(--bg-event-cell) !important; 
             color: var(--text-event-cell); 
@@ -168,6 +161,15 @@
         table.wbs-table td.cell-day.has-event-default { 
             background: var(--bg-default-cell) !important; 
             color: var(--text-default-cell); 
+            font-weight: bold;
+        }
+
+        /* 案内用の空っぽ表示スタイル */
+        .empty-notice {
+            padding: 40px;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.95rem;
             font-weight: bold;
         }
 
@@ -206,15 +208,11 @@
 
 <div class="container">
     <header>
-        <!-- ======================================================== -->
-        <!-- 【バンド名変更エリア2】                                  -->
-        <!-- ======================================================== -->
         <h1>🎸 迎撃乙女バンド運営スケジュール</h1>
         
         <button id="btn-open-menu" class="btn-main">編集メニュー</button>
     </header>
 
-    <!-- WBS表示エリア -->
     <div class="wbs-container">
         <div class="wbs-header">
             <button id="btn-prev-month" class="btn-sub">◀ 前月</button>
@@ -224,32 +222,32 @@
         <table class="wbs-table">
             <thead>
                 <tr id="table-header-days">
-                    <!-- JSで動的に日付ヘッダーを生成 -->
-                </tr>
+                    </tr>
             </thead>
             <tbody id="wbs-tbody">
-                <!-- JSで動的に行を生成 -->
-            </tbody>
+                </tbody>
         </table>
+        <div id="div-empty-notice" class="empty-notice hidden">
+            右上の「編集メニュー」から大分類を登録すると、スケジュール表が生成されます！
+        </div>
     </div>
 </div>
 
-<!-- ==================== モーダル1：メインメニュー編集画面（分類設定） ==================== -->
 <div id="modal-menu" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>メインメニュー編集（分類登録）</h2>
         <form id="form-category">
             <div class="form-group">
-                <label>大分類名（例: イベント、楽曲制作、SNS）</label>
-                <input type="text" id="input-main-cat" placeholder="大分類名を入力" required>
+                <label>大分類名（例: イベント、楽曲制作、SNS） <span style="color:red;">*必須</span></label>
+                <input type="text" id="input-main-cat" placeholder="大分類名を入力（例：イベント）" required>
             </div>
             <div class="form-group">
-                <label>中分類名（例: ライブ、スタジオ、abelia）</label>
-                <input type="text" id="input-mid-cat" placeholder="中分類名を入力" required>
+                <label>中分類名（任意）</label>
+                <input type="text" id="input-mid-cat" placeholder="空欄でも登録できます">
             </div>
             <div class="form-group">
-                <label>小分類名（例: finesound、rising hope、超次元）</label>
-                <input type="text" id="input-sub-cat" placeholder="小分類名を入力" required>
+                <label>小分類名（任意）</label>
+                <input type="text" id="input-sub-cat" placeholder="空欄でも登録できます">
             </div>
             <div class="modal-actions">
                 <button type="button" id="btn-close-menu" class="btn-sub">閉じる</button>
@@ -259,7 +257,6 @@
     </div>
 </div>
 
-<!-- ==================== モーダル2：詳細画面 ==================== -->
 <div id="modal-detail" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>詳細画面</h2>
@@ -290,7 +287,6 @@
     </div>
 </div>
 
-<!-- ==================== モーダル3：編集画面 ==================== -->
 <div id="modal-edit" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>編集画面</h2>
@@ -327,26 +323,8 @@
     // --- 状態管理 ---
     let currentDate = new Date(2026, 5, 1); // 2026年6月スタート
     
-    // 分類データの初期構造
-    let categories = JSON.parse(localStorage.getItem('bandCategories3')) || [
-        { 
-            main: 'イベント', 
-            mids: [
-                { mid: 'ライブ', subs: ['薬院refrex'] },
-                { mid: 'スタジオ', subs: ['finesound'] },
-                { mid: 'MEET', subs: ['佐々木宅'] }
-            ] 
-        },
-        {
-            main: '楽曲制作',
-            mids: [
-                { mid: 'abelia', subs: ['リハーサル'] }
-            ]
-        }
-    ];
-
-    // スケジュール詳細データ
-    let schedules = JSON.parse(localStorage.getItem('bandSchedules3')) || {};
+    let categories = JSON.parse(localStorage.getItem('bandCategoriesFlexible')) || [];
+    let schedules = JSON.parse(localStorage.getItem('bandSchedulesFlexible')) || {};
 
     let activeCellInfo = { dateStr: '', mainCat: '', midCat: '', subCat: '' };
 
@@ -376,6 +354,9 @@
         const numDays = new Date(year, month + 1, 0).getDate();
 
         const headerRow = document.getElementById('table-header-days');
+        const tbody = document.getElementById('wbs-tbody');
+        const emptyNotice = document.getElementById('div-empty-notice');
+
         headerRow.innerHTML = `<th class="col-main">大分類</th><th class="col-mid">中分類</th><th class="col-sub">小分類</th>`;
         for (let d = 1; d <= numDays; d++) {
             const th = document.createElement('th');
@@ -384,11 +365,16 @@
             headerRow.appendChild(th);
         }
 
-        const tbody = document.getElementById('wbs-tbody');
         tbody.innerHTML = '';
 
+        if (categories.length === 0) {
+            emptyNotice.classList.remove('hidden');
+            return;
+        } else {
+            emptyNotice.classList.add('hidden');
+        }
+
         categories.forEach(cat => {
-            // 大分類の行を追加（名前によって色クラスを出し分け）
             const catRow = document.createElement('tr');
             catRow.className = 'category-row';
             if (cat.main.includes('イベント')) {
@@ -411,11 +397,12 @@
                     
                     const tdMid = document.createElement('td');
                     tdMid.className = 'col-mid';
-                    tdMid.innerText = midObj.mid;
+                    // 空欄の場合はハイフン表示で美しく見せる
+                    tdMid.innerText = midObj.mid || '-';
                     
                     const tdSub = document.createElement('td');
                     tdSub.className = 'col-sub';
-                    tdSub.innerText = sub;
+                    tdSub.innerText = sub || '-';
                     
                     row.appendChild(tdMainPlaceholder);
                     row.appendChild(tdMid);
@@ -429,7 +416,6 @@
                         const scheduleKey = `${dateStr}_${cat.main}_${midObj.mid}_${sub}`;
                         
                         if (schedules[scheduleKey]) {
-                            // 大分類ごとに、スケジュールが入ったマスの色も出し分け
                             if (cat.main.includes('イベント')) {
                                 cell.classList.add('has-event-live');
                             } else if (cat.main.includes('楽曲制作')) {
@@ -449,10 +435,11 @@
         });
     }
 
-    // --- 分類登録 ---
+    // --- 分類登録（空欄を許容するロジックに変更） ---
     function handleCategorySubmit(e) {
         e.preventDefault();
         const mainCatInput = document.getElementById('input-main-cat').value.trim();
+        // 空欄の場合は空文字を設定
         const midCatInput = document.getElementById('input-mid-cat').value.trim();
         const subCatInput = document.getElementById('input-sub-cat').value.trim();
 
@@ -472,7 +459,7 @@
             targetMid.subs.push(subCatInput);
         }
 
-        localStorage.setItem('bandCategories3', JSON.stringify(categories));
+        localStorage.setItem('bandCategoriesFlexible', JSON.stringify(categories));
         renderWBS();
         
         document.getElementById('form-category').reset();
@@ -486,7 +473,13 @@
         const data = schedules[scheduleKey] || { location: '', song: '', content: '' };
 
         document.getElementById('view-date').innerText = dateStr.replace(/-/g, '/');
-        document.getElementById('view-category').innerText = `${mainCat} ＞ ${midCat} ＞ ${subCat}`;
+        
+        // 分類ラベルの表示切り替え（空欄のものは除外してスマートに見せる）
+        let catPath = mainCat;
+        if(midCat) catPath += ` ＞ ${midCat}`;
+        if(subCat) catPath += ` ＞ ${subCat}`;
+        document.getElementById('view-category').innerText = catPath;
+        
         document.getElementById('view-location').innerText = data.location || '記載なし';
         document.getElementById('view-song').innerText = data.song || '記載なし';
         document.getElementById('view-content').innerText = data.content || '記載なし';
@@ -503,7 +496,11 @@
         const data = schedules[scheduleKey] || { location: '', song: '', content: '' };
 
         document.getElementById('edit-date-label').innerText = dateStr.replace(/-/g, '/');
-        document.getElementById('edit-category-label').innerText = `${mainCat} ＞ ${midCat} ＞ ${subCat}`;
+        
+        let catPath = mainCat;
+        if(midCat) catPath += ` ＞ ${midCat}`;
+        if(subCat) catPath += ` ＞ ${subCat}`;
+        document.getElementById('edit-category-label').innerText = catPath;
 
         document.getElementById('input-location').value = data.location;
         document.getElementById('input-song').value = data.song;
@@ -528,7 +525,7 @@
             delete schedules[scheduleKey];
         }
 
-        localStorage.setItem('bandSchedules3', JSON.stringify(schedules));
+        localStorage.setItem('bandSchedulesFlexible', JSON.stringify(schedules));
         renderWBS();
 
         document.getElementById('modal-edit').classList.add('hidden');
