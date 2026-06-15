@@ -413,12 +413,12 @@
             </div>
             <div class="form-group">
                 <label>小分類（項目名）</label>
-                <input type="text" id="input-sub-cat-edit" list="datalist-sub-cats" placeholder="例: 新宿LOFTワンマン、新曲Aレコーディングなど">
+                <input type="text" id="input-sub-cat-edit" list="datalist-sub-cats" placeholder="例: 主にスタジオ分類で記載【未記載でもＯＫ】">
                 <datalist id="datalist-sub-cats"></datalist>
             </div>
             <div class="form-group">
                 <label>場所</label>
-                <input type="text" id="input-location" list="datalist-locations" placeholder="例: 吉祥寺WARP、スタジオペンタなど">
+                <input type="text" id="input-location" list="datalist-locations" placeholder="例: fine天神Eスタ/ゴンスタAなど">
                 <datalist id="datalist-locations"></datalist>
             </div>
             
@@ -854,10 +854,10 @@
 
         document.getElementById('view-date').innerText = dateStr.replace(/-/g, '/');
         document.getElementById('view-category').innerText = `${mainCat} ＞ ${midCat}`;
-        document.getElementById('view-sub-cat').innerText = data.subCat || '未設定（空欄）';
-        document.getElementById('view-location').innerText = data.location || '記載なし';
-        document.getElementById('view-song').innerText = data.song || '記載なし';
-        document.getElementById('view-content').innerText = data.content || '記載なし';
+        document.getElementById('view-sub-cat').innerText = data.subCat || '';
+        document.getElementById('view-location').innerText = data.location || '';
+        document.getElementById('view-song').innerText = data.song || '';
+        document.getElementById('view-content').innerText = data.content || '';
         document.getElementById('modal-detail').classList.remove('hidden');
     }
 
