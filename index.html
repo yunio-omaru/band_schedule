@@ -646,19 +646,16 @@
             cat.mids.forEach(mid => {
                 const uniqueSubCats = new Set();
                 
-                for (let d = 1; d <= numDays; d++) {
-                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                    const prefix = `${dateStr}_${cat.main}_${mid}_`;
-                    
-                    Object.keys(schedules).forEach(key => {
-                        if (key.startsWith(prefix)) {
-                            const data = schedules[key];
-                            if (data && data.subCat) {
-                                uniqueSubCats.add(data.subCat);
-                            }
+                // schedules内のすべてのキーを走査し、この大分類・中分類に属する小分類（subCat）のリストを抽出
+                Object.keys(schedules).forEach(key => {
+                    const parts = key.split('_');
+                    if (parts.length >= 4 && parts[1] === cat.main && parts[2] === mid) {
+                        const subName = parts.slice(3).join('_');
+                        if (subName) {
+                            uniqueSubCats.add(subName);
                         }
-                    });
-                }
+                    }
+                });
 
                 const row = document.createElement('tr');
                 const rowKey = `${cat.main}_${mid}`;
@@ -683,6 +680,7 @@
                 
                 row.appendChild(tdMainPlaceholder); row.appendChild(tdMid);
 
+                // 小分類なし（ベース行）のセル描画
                 for (let d = 1; d <= numDays; d++) {
                     const cell = document.createElement('td');
                     cell.className = 'cell-day';
@@ -702,6 +700,7 @@
                 }
                 tbody.appendChild(row);
 
+                // 抽出された小分類（子行）を展開して描画
                 uniqueSubCats.forEach(subCatName => {
                     const subRow = document.createElement('tr');
                     const subRowKey = `${cat.main}_${mid}_${subCatName}`;
@@ -888,7 +887,7 @@
                 const parts = key.split('_');
                 const main = parts[1];
                 const mid = parts[2];
-                const subKey = parts[3] || '';
+                const subKey = parts.slice(3).join('_');
                 const data = schedules[key];
                 
                 if (data && (data.subCat || data.location || data.song || data.content)) {
@@ -939,11 +938,6 @@
         const dateStr = activeCellInfo.dateStr;
         document.getElementById('modal-day-detail').classList.add('hidden');
 
-        // 📌 日付変更欄を非表示、通常の日付ラベルを表示
-        document.getElementById('group-edit-date-display').classList.remove('hidden');
-        document.getElementById('group-edit-date-input').classList.add('hidden');
-        document.getElementById('group-multi-date-wrapper').classList.remove('hidden');
-
         const catSelect = document.getElementById('select-target-cat-path');
         catSelect.innerHTML = '';
         categories.forEach(cat => {
@@ -993,13 +987,7 @@
         const scheduleKey = `${dateStr}_${mainCat}_${midCat}_${subCatKey}`;
         const data = schedules[scheduleKey] || { subCat: subCatKey, location: '', song: '', content: '' };
 
-        // 📌 既存予定の編集なので、日付変更インプットを表示して選択可能に
-        document.getElementById('group-edit-date-display').classList.add('hidden');
-        document.getElementById('group-edit-date-input').classList.remove('hidden');
-        document.getElementById('input-date-edit').value = dateStr;
-        // 日付を移動（上書き変更）させる場合は、一括登録エリアを隠す
-        document.getElementById('group-multi-date-wrapper').classList.add('hidden');
-
+        document.getElementById('edit-date-label').innerText = dateStr.replace(/-/g, '/');
         document.getElementById('edit-cat-path-label').innerText = `${mainCat} ＞ ${midCat}`;
         
         document.getElementById('group-edit-cat-select').classList.add('hidden');
@@ -1149,6 +1137,7 @@
         e.preventDefault();
         let { dateStr, mainCat, midCat, subCatKey } = activeCellInfo;
         
+        // 新規登録等で、セレクトボックスから大・中分類を選ぶ場合
         if (!document.getElementById('group-edit-cat-select').classList.contains('hidden')) {
             const selectVal = document.getElementById('select-target-cat-path').value;
             if(!selectVal) return;
@@ -1169,48 +1158,34 @@
         const song = songVals.join(', ');
         const content = document.getElementById('input-content').value.trim();
 
-        // 📌 日付変更欄が有効な場合は、変更後の日付を取得
-        let finalDateStr = dateStr;
-        const dateInputGroup = document.getElementById('group-edit-date-input');
-        if (!dateInputGroup.classList.contains('hidden')) {
-            const changedDate = document.getElementById('input-date-edit').value;
-            if (changedDate) {
-                finalDateStr = changedDate;
-            }
-        }
-
-        // 一括登録が有効かどうか判別
-        const isMultiDate = document.getElementById('chk-multi-date').checked && dateInputGroup.classList.contains('hidden');
-        let targetDates = [finalDateStr]; 
+        // 一括登録のチェック判別
+        const isMultiDate = document.getElementById('chk-multi-date').checked;
+        let targetDates = [dateStr];
 
         if (isMultiDate) {
             const checkedBoxes = document.querySelectorAll('.cb-target-multidate:checked');
             targetDates = Array.from(checkedBoxes).map(cb => cb.value);
         }
 
-        // 既存の単発キー
-        const oldKey = `${dateStr}_${mainCat}_${midCat}_${subCatKey}`;
-
+        // 入力値がある場合は保存、すべて空なら削除処理
         if (subCat || location || song || content) {
-            // 📌 日付が変更された、または小分類名が変わった場合、古いキーのデータを確実に削除する
-            if (!isMultiDate && oldKey !== `${finalDateStr}_${mainCat}_${midCat}_${subCat}`) {
+            
+            // 単発編集かつ小分類（行名）が変更された場合のみ、元の古いキーを削除
+            if (!isMultiDate && subCatKey !== subCat) {
+                const oldKey = `${dateStr}_${mainCat}_${midCat}_${subCatKey}`;
                 delete schedules[oldKey];
             }
 
-            // 対象日にデータを書き込み
+            // 選択されたすべての日付に対してデータをマッピング（上書き保存）
             targetDates.forEach(dStr => {
                 const newKey = `${dStr}_${mainCat}_${midCat}_${subCat}`;
                 schedules[newKey] = { subCat, location, song, content };
             });
 
-            // 📌 日付変更（移動）をした際、カレンダーの表示月を移動先の日付に合わせる
-            if (finalDateStr !== dateStr) {
-                const parts = finalDateStr.split('-');
-                currentDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
-            }
         } else {
-            // すべて空欄にされた場合は削除
+            // 入力がすべて空欄にされた場合は削除とみなす
             if (!isMultiDate) {
+                const oldKey = `${dateStr}_${mainCat}_${midCat}_${subCatKey}`;
                 delete schedules[oldKey];
             } else {
                 targetDates.forEach(dStr => {
