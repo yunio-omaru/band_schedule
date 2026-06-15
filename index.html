@@ -106,20 +106,42 @@
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             overflow-x: auto;
+            max-height: 75vh; /* 縦スクロール時にヘッダーを固定するための高さ制限 */
         }
         table.wbs-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate; /* stickyを正常に効かせるため collapse から変更 */
+            border-spacing: 0;
             font-size: 0.85rem;
             min-width: 1100px;
         }
         table.wbs-table th, table.wbs-table td {
-            border: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
             padding: 10px 4px; 
             text-align: center;
             height: 38px;
         }
-        table.wbs-table th { background: #f1f2f6; font-weight: bold; color: #57606f;}
+        /* 外枠の左と上用のボーダー補填 */
+        table.wbs-table {
+            border-left: 1px solid var(--border-color);
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 📌 表頭（ヘッダー行）固定のCSS設定 */
+        table.wbs-table thead th {
+            position: sticky;
+            top: -21px; /* ラッパーのpadding相殺用調整 */
+            background: #f1f2f6;
+            font-weight: bold;
+            color: #57606f;
+            z-index: 20;
+        }
+        /* 固定列の交差点(左上のヘッダー3マス)はz-indexをさらに高くする */
+        table.wbs-table thead th.col-fixed-head {
+            z-index: 30;
+        }
+
         table.wbs-table .col-done { width: 45px; }
         table.wbs-table .col-main { width: 100px; text-align: left; font-weight: bold; }
         table.wbs-table .col-mid { width: 150px; text-align: left; font-weight: bold; color: #57606f; background: #fafafa; cursor: pointer; }
@@ -360,11 +382,16 @@
                 <input type="text" id="input-sub-cat-edit" list="datalist-sub-cats" placeholder="例: 新宿LOFTワンマン、新曲Aレコーディングなど">
                 <datalist id="datalist-sub-cats"></datalist>
             </div>
-            <div class="form-group"><label>場所</label><input type="text" id="input-location"></div>
+            <div class="form-group">
+                <label>場所</label>
+                <input type="text" id="input-location" list="datalist-locations" placeholder="例: 吉祥寺WARP、スタジオペンタなど">
+                <datalist id="datalist-locations"></datalist>
+            </div>
             
             <div class="form-group">
                 <label>楽曲</label>
                 <div id="song-inputs-wrapper" class="song-inputs-container"></div>
+                <datalist id="datalist-songs"></datalist>
             </div>
 
             <div class="form-group"><label>内容詳細</label><textarea id="input-content" rows="3"></textarea></div>
@@ -405,7 +432,7 @@
     let currentDate = new Date(2026, 5, 1); 
     let categories = []; 
     let schedules = {};  
-    let doneRows = []; // 終了行の情報を保持 [ "大分類_中分類", "大分類_中分類_小分類" ]
+    let doneRows = []; 
     let activeCellInfo = { dateStr: '', mainCat: '', midCat: '', subCatKey: '' }; 
     let activeCatEditInfo = { type: '', main: '', mid: '' }; 
 
@@ -457,7 +484,6 @@
                 const data = await res.json();
                 categories = data.categories || [];
                 schedules = data.schedules || {};
-                // スプレッドシート側でdoneRowsを受け取る仕組みがない場合はローカルとマージ
                 if (data.doneRows) doneRows = data.doneRows; 
                 localStorage.setItem('ss_categories2', JSON.stringify(categories));
                 localStorage.setItem('ss_schedules2', JSON.stringify(schedules));
@@ -532,7 +558,12 @@
         const headerRow = document.getElementById('table-header-days');
         const tbody = document.getElementById('wbs-tbody');
 
-        headerRow.innerHTML = `<th class="col-done">☑</th><th class="col-main">大分類</th><th class="col-mid">中分類行 / 登録項目</th>`;
+        // 固定列ヘッダーの区別用にクラスを追加
+        headerRow.innerHTML = `
+            <th class="col-done col-fixed-head">☑</th>
+            <th class="col-main col-fixed-head">大分類</th>
+            <th class="col-mid col-fixed-head">中分類行 / 登録項目</th>
+        `;
         for (let d = 1; d <= numDays; d++) {
             const th = document.createElement('th'); th.innerText = d; headerRow.appendChild(th);
         }
@@ -547,7 +578,7 @@
             else catRow.classList.add('category-default');
             
             const catTd = document.createElement('td');
-            catTd.setAttribute('colspan', numDays + 3); // チェック用の列追加に伴い+3に
+            catTd.setAttribute('colspan', numDays + 3); 
             catTd.innerText = `📢 ${cat.main} (タップで名前変更/行削除)`;
             catTd.addEventListener('click', () => openCategoryEditModal('main', cat.main));
             catRow.appendChild(catTd);
@@ -873,19 +904,18 @@
         document.getElementById('input-sub-cat-edit').value = '';
         document.getElementById('input-location').value = '';
         
-        // 🎵 楽曲エリアを初期化
         setSongInputs([]);
         
         document.getElementById('input-content').value = '';
         document.getElementById('btn-delete-schedule').classList.add('hidden');
         
-        // 分類が特定されていないためプルダウンのサジェストは空にする
+        // サジェスト候補データを全読み込みして設定
         setupSubCatDatalist('', '');
+        setupLocationAndSongDatalist();
 
         document.getElementById('modal-edit-schedule').classList.remove('hidden');
         activeCellInfo.subCatKey = ''; 
 
-        // 分類変更時、プルダウン候補を再生成するイベント
         catSelect.onchange = function() {
             const parts = this.value.split('___');
             setupSubCatDatalist(parts[0], parts[1]);
@@ -911,7 +941,6 @@
         document.getElementById('input-sub-cat-edit').value = data.subCat || '';
         document.getElementById('input-location').value = data.location || '';
         
-        // 🎵 既存のカンマや改行区切りの楽曲データを分配してフォームにセット
         let songArray = [];
         if (data.song) {
             songArray = data.song.split(/[,\n、]/).map(s => s.trim()).filter(s => s !== "");
@@ -921,20 +950,20 @@
         document.getElementById('input-content').value = data.content || '';
         document.getElementById('btn-delete-schedule').classList.remove('hidden');
 
-        // 小分類のプルダウン（サジェスト候補）を構築
+        // 各種プルダウン（サジェスト候補）を構築
         setupSubCatDatalist(mainCat, midCat);
+        setupLocationAndSongDatalist();
 
         document.getElementById('modal-edit-schedule').classList.remove('hidden');
     }
 
-    // 💡 小分類の既存データサジェスト用プルダウンを構成する関数
+    // 小分類の既存データサジェスト用プルダウンを構成
     function setupSubCatDatalist(mainCat, midCat) {
         const datalist = document.getElementById('datalist-sub-cats');
         datalist.innerHTML = '';
         if(!mainCat || !midCat) return;
 
         const subCatSet = new Set();
-        // 全予定データを走査し、同じ分類行に登録されている小分類名を抽出
         Object.keys(schedules).forEach(key => {
             const parts = key.split('_');
             if (parts[1] === mainCat && parts[2] === midCat) {
@@ -952,6 +981,45 @@
         });
     }
 
+    // 💡 場所名と楽曲名のマスター用サジェスト生成関数
+    function setupLocationAndSongDatalist() {
+        const locationDatalist = document.getElementById('datalist-locations');
+        const songDatalist = document.getElementById('datalist-songs');
+        
+        locationDatalist.innerHTML = '';
+        songDatalist.innerHTML = '';
+
+        const locationSet = new Set();
+        const songSet = new Set();
+
+        // 登録されている全予定からデータをスキャン収集
+        Object.keys(schedules).forEach(key => {
+            const data = schedules[key];
+            if (data) {
+                if (data.location) locationSet.add(data.location.trim());
+                if (data.song) {
+                    // カンマ区切りで登録されている楽曲名を分解して収集
+                    const splitSongs = data.song.split(/[,\n、]/).map(s => s.trim()).filter(s => s !== "");
+                    splitSongs.forEach(s => songSet.add(s));
+                }
+            }
+        });
+
+        // 場所のdatalistへ反映
+        locationSet.forEach(loc => {
+            const opt = document.createElement('option');
+            opt.value = loc;
+            locationDatalist.appendChild(opt);
+        });
+
+        // 楽曲のdatalistへ反映
+        songSet.forEach(song => {
+            const opt = document.createElement('option');
+            opt.value = song;
+            songDatalist.appendChild(opt);
+        });
+    }
+
     // 🎵 楽曲の動的枠生成用ロジック
     function setSongInputs(songArray) {
         const wrapper = document.getElementById('song-inputs-wrapper');
@@ -961,7 +1029,6 @@
         for (let i = 0; i < count; i++) {
             createSongInputElement(songArray[i] || '');
         }
-        // 予備の最終入力枠を必ず最後に1個置いておく
         createSongInputElement('');
     }
 
@@ -972,8 +1039,9 @@
         input.className = 'input-song-item';
         input.placeholder = '楽曲名を入力';
         input.value = value;
+        // 💡 共通の楽曲用datalistを紐付け
+        input.setAttribute('list', 'datalist-songs');
 
-        // 文字入力されたタイミングで、最末尾の枠であれば新しい枠を追加
         input.addEventListener('input', () => {
             const allInputs = wrapper.querySelectorAll('.input-song-item');
             const lastInput = allInputs[allInputs.length - 1];
@@ -1003,7 +1071,6 @@
         const subCat = document.getElementById('input-sub-cat-edit').value.trim();
         const location = document.getElementById('input-location').value.trim();
         
-        // 🎵 複数ある入力枠の値をカンマ区切りの文字列へ変換
         const songInputs = document.querySelectorAll('.input-song-item');
         const songVals = [];
         songInputs.forEach(inp => {
