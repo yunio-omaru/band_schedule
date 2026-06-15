@@ -895,7 +895,7 @@
 
                     div.innerHTML = `
                         <span class="item-category-tag ${tagClass}">${main} ＞ ${mid}</span>
-                        <div class="item-title">📍 小分類: ${data.subCat || '未設定'}</div>
+                        <div class="item-title">📍 小分類: ${data.subCat || '-'}</div>
                         <div style="font-size:0.75rem; color:#555;">
                             ${data.location ? `🏠 場所: ${data.location}` : ''} 
                             ${data.song ? ` 🎵 楽曲: ${data.song}` : ''}
