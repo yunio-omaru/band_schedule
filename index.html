@@ -124,6 +124,9 @@
         table.wbs-table .col-mid { width: 150px; text-align: left; font-weight: bold; color: #57606f; background: #fafafa; cursor: pointer; }
         table.wbs-table .col-mid:hover { background: #e0e0e0 !important; }
         
+        /* 動的に追加される小分類行の個別スタイル */
+        table.wbs-table .col-sub-title { text-align: left; padding-left: 15px; font-size: 0.8rem; color: #7f8c8d; background: #fcfcfc; font-style: italic; }
+
         table.wbs-table tr.category-row td {
             font-weight: bold; text-align: left; font-size: 0.95rem; padding: 10px 15px; color: white; cursor: pointer;
         }
@@ -248,7 +251,6 @@
         右上の「分類行を追加」からベースの活動行を登録すると、スケジュール表が生成されます！
     </div>
 
-    <!-- 【パターンA】PC版 / 横画面用：WBSビュー -->
     <div class="wbs-view-wrapper" id="wbs-view-area">
         <table class="wbs-table">
             <thead><tr id="table-header-days"></tr></thead>
@@ -256,13 +258,11 @@
         </table>
     </div>
 
-    <!-- 【パターンB】スマホ縦画面用：Googleカレンダー風ビュー -->
     <div class="calendar-view-wrapper" id="calendar-view-area">
         <div class="calendar-grid" id="calendar-grid-body"></div>
     </div>
 </div>
 
-<!-- モーダル1：大・中分類（行）の新規追加画面 -->
 <div id="modal-menu" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>分類行（予定のベース）の追加</h2>
@@ -301,7 +301,6 @@
     </div>
 </div>
 
-<!-- モーダル2：詳細閲覧画面 (WBSセルのタップで展開) -->
 <div id="modal-detail" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>予定の詳細</h2>
@@ -318,7 +317,6 @@
     </div>
 </div>
 
-<!-- モーダル3：スマホカレンダー用：特定日の予定一覧ポップアップ -->
 <div id="modal-day-detail" class="modal-overlay hidden">
     <div class="modal-card">
         <h2 id="modal-day-label">予定一覧</h2>
@@ -330,7 +328,6 @@
     </div>
 </div>
 
-<!-- モーダル4：スケジュール個別入力・編集メイン画面 (共通) -->
 <div id="modal-edit-schedule" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>スケジュールの入力・編集</h2>
@@ -345,8 +342,8 @@
                 <div id="edit-cat-path-label" style="font-weight: bold; color: #555;"></div>
             </div>
             <div class="form-group">
-                <label>小分類（項目名） *必須</label>
-                <input type="text" id="input-sub-cat-edit" required placeholder="例: 新宿LOFTワンマン、新曲Aレコーディングなど">
+                <label>小分類（項目名） ※任意</label>
+                <input type="text" id="input-sub-cat-edit" placeholder="例: 新宿LOFT、新曲Aレコーディングなど (空欄OK)">
             </div>
             <div class="form-group"><label>場所</label><input type="text" id="input-location"></div>
             <div class="form-group"><label>楽曲</label><input type="text" id="input-song"></div>
@@ -363,7 +360,6 @@
     </div>
 </div>
 
-<!-- モーダル5：WBS大・中分類の変更・削除用画面 -->
 <div id="modal-edit-category" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>分類行の変更・削除</h2>
@@ -389,7 +385,7 @@
     let currentDate = new Date(2026, 5, 1); 
     let categories = []; 
     let schedules = {};  
-    let activeCellInfo = { dateStr: '', mainCat: '', midCat: '' }; 
+    let activeCellInfo = { dateStr: '', mainCat: '', midCat: '', subCatKey: '' }; 
     let activeCatEditInfo = { type: '', main: '', mid: '' }; 
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -504,20 +500,21 @@
     }
 
     // ==========================================
-    // 📊 WBS（表）形式のレンダリング処理
+    // 📊 WBS（表）形式のレンダリング処理 【大幅拡張】
     // ==========================================
     function renderWBSView(year, month) {
         const numDays = new Date(year, month + 1, 0).getDate();
         const headerRow = document.getElementById('table-header-days');
         const tbody = document.getElementById('wbs-tbody');
 
-        headerRow.innerHTML = `<th class="col-main">大分類</th><th class="col-mid">中分類行</th>`;
+        headerRow.innerHTML = `<th class="col-main">大分類</th><th class="col-mid">中分類 / 登録項目</th>`;
         for (let d = 1; d <= numDays; d++) {
             const th = document.createElement('th'); th.innerText = d; headerRow.appendChild(th);
         }
         tbody.innerHTML = '';
 
         categories.forEach(cat => {
+            // 大分類ヘッダー行
             const catRow = document.createElement('tr');
             catRow.className = 'category-row';
             if (cat.main === 'イベント') catRow.classList.add('category-event');
@@ -533,6 +530,25 @@
             tbody.appendChild(catRow);
 
             cat.mids.forEach(mid => {
+                // 当月内でこの大・中分類に登録されている「小分類」のユニークなリストを取得する
+                const uniqueSubCats = new Set();
+                
+                for (let d = 1; d <= numDays; d++) {
+                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    const prefix = `${dateStr}_${cat.main}_${mid}`;
+                    
+                    Object.keys(schedules).forEach(key => {
+                        if (key.startsWith(prefix)) {
+                            const data = schedules[key];
+                            // 小分類名が登録されていれば抽出リストに入れる
+                            if (data && data.subCat) {
+                                uniqueSubCats.add(data.subCat);
+                            }
+                        }
+                    });
+                }
+
+                // ① 基本の中分類メイン行（小分類が「空欄」のデータをマッピングする行）
                 const row = document.createElement('tr');
                 const tdMainPlaceholder = document.createElement('td');
                 tdMainPlaceholder.className = 'col-main'; tdMainPlaceholder.style.background = '#fff';
@@ -547,7 +563,9 @@
                     const cell = document.createElement('td');
                     cell.className = 'cell-day';
                     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                    const scheduleKey = `${dateStr}_${cat.main}_${mid}`;
+                    
+                    // 小分類が「空」のデータのキー
+                    const scheduleKey = `${dateStr}_${cat.main}_${mid}_`; 
                     
                     if (schedules[scheduleKey]) {
                         if (cat.main === 'イベント') cell.classList.add('has-event-live');
@@ -555,12 +573,48 @@
                         else if (cat.main === 'SNS') cell.classList.add('has-event-sns');
                         else cell.classList.add('has-event-default');
                         
-                        cell.innerText = schedules[scheduleKey].subCat || '有';
+                        // 表示ルール：場所 ＞ なければ内容詳細 ＞ なければ「有」
+                        cell.innerText = schedules[scheduleKey].location || schedules[scheduleKey].content || '有';
                     }
-                    cell.addEventListener('click', () => openWBSDetailModal(dateStr, cat.main, mid));
+                    cell.addEventListener('click', () => openWBSDetailModal(dateStr, cat.main, mid, ''));
                     row.appendChild(cell);
                 }
                 tbody.appendChild(row);
+
+                // ② 【動的小分類行】小分類が存在する場合、その数だけ専用の配下行を自動追加
+                uniqueSubCats.forEach(subCatName => {
+                    const subRow = document.createElement('tr');
+                    
+                    const tdSubMainSpace = document.createElement('td');
+                    tdSubMainSpace.className = 'col-main'; tdSubMainSpace.style.background = '#fff';
+                    
+                    const tdSubTitle = document.createElement('td');
+                    tdSubTitle.className = 'col-sub-title';
+                    tdSubTitle.innerText = `↳ ${subCatName}`;
+                    
+                    subRow.appendChild(tdSubMainSpace);
+                    subRow.appendChild(tdSubTitle);
+
+                    for (let d = 1; d <= numDays; d++) {
+                        const cell = document.createElement('td');
+                        cell.className = 'cell-day';
+                        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                        const scheduleKey = `${dateStr}_${cat.main}_${mid}_${subCatName}`;
+
+                        if (schedules[scheduleKey]) {
+                            if (cat.main === 'イベント') cell.classList.add('has-event-live');
+                            else if (cat.main === '楽曲制作') cell.classList.add('has-event-music');
+                            else if (cat.main === 'SNS') cell.classList.add('has-event-sns');
+                            else cell.classList.add('has-event-default');
+                            
+                            // 表示ルール：場所 ＞ なければ内容詳細 ＞ なければ「有」
+                            cell.innerText = schedules[scheduleKey].location || schedules[scheduleKey].content || '有';
+                        }
+                        cell.addEventListener('click', () => openWBSDetailModal(dateStr, cat.main, mid, subCatName));
+                        subRow.appendChild(cell);
+                    }
+                    tbody.appendChild(subRow);
+                });
             });
         });
     }
@@ -608,22 +662,30 @@
         badgesContainer.className = 'event-badges-container';
 
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        categories.forEach(cat => {
-            cat.mids.forEach(mid => {
-                const scheduleKey = `${dateStr}_${cat.main}_${mid}`;
-                if (schedules[scheduleKey]) {
+        
+        // 当日のスケジュールデータを全スキャンしてバッジを生成
+        Object.keys(schedules).forEach(key => {
+            if (key.startsWith(dateStr)) {
+                const parts = key.split('_');
+                const mainCat = parts[1];
+                const midCat = parts[2];
+                const data = schedules[key];
+
+                if (data) {
                     const badge = document.createElement('div');
                     badge.className = 'day-badge';
-                    if (cat.main === 'イベント') badge.classList.add('badge-event');
-                    else if (cat.main === '楽曲制作') badge.classList.add('badge-music');
-                    else if (cat.main === 'SNS') badge.classList.add('badge-sns');
+                    if (mainCat === 'イベント') badge.classList.add('badge-event');
+                    else if (mainCat === '楽曲制作') badge.classList.add('badge-music');
+                    else if (mainCat === 'SNS') badge.classList.add('badge-sns');
                     else badge.classList.add('badge-default');
                     
-                    badge.innerText = `${mid}:${schedules[scheduleKey].subCat || '予定'}`;
+                    // カレンダーのテキスト表示ルール：小分類 ＞ なければ場所 ＞ なければ「予定」
+                    badge.innerText = `${midCat}:${data.subCat || data.location || '予定'}`;
                     badgesContainer.appendChild(badge);
                 }
-            });
+            }
         });
+        
         cell.appendChild(badgesContainer);
         cell.addEventListener('click', () => openCalendarDayModal(dateStr));
         targetGrid.appendChild(cell);
@@ -650,14 +712,14 @@
     }
 
     // --- WBS：セルクリック時の詳細ポップアップ ---
-    function openWBSDetailModal(dateStr, mainCat, midCat) {
-        activeCellInfo = { dateStr, mainCat, midCat };
-        const scheduleKey = `${dateStr}_${mainCat}_${midCat}`;
+    function openWBSDetailModal(dateStr, mainCat, midCat, subCatKey) {
+        activeCellInfo = { dateStr, mainCat, midCat, subCatKey };
+        const scheduleKey = `${dateStr}_${mainCat}_${midCat}_${subCatKey}`;
         const data = schedules[scheduleKey] || { subCat: '', location: '', song: '', content: '' };
 
         document.getElementById('view-date').innerText = dateStr.replace(/-/g, '/');
         document.getElementById('view-category').innerText = `${mainCat} ＞ ${midCat}`;
-        document.getElementById('view-sub-cat').innerText = data.subCat || '未設定';
+        document.getElementById('view-sub-cat').innerText = data.subCat || '未設定（空欄）';
         document.getElementById('view-location').innerText = data.location || '記載なし';
         document.getElementById('view-song').innerText = data.song || '記載なし';
         document.getElementById('view-content').innerText = data.content || '記載なし';
@@ -666,12 +728,12 @@
 
     function transitDetailToEdit() {
         document.getElementById('modal-detail').classList.add('hidden');
-        openDirectEditForm(activeCellInfo.dateStr, activeCellInfo.mainCat, activeCellInfo.midCat);
+        openDirectEditForm(activeCellInfo.dateStr, activeCellInfo.mainCat, activeCellInfo.midCat, activeCellInfo.subCatKey);
     }
 
-    // ========================================================
-    // ⭐【今回改修】カレンダー：日付タップ時のスリムポップアップ
-    // ========================================================
+    // ==========================================
+    // カレンダー：日付タップ時のスリムポップアップ
+    // ==========================================
     function openCalendarDayModal(dateStr) {
         activeCellInfo.dateStr = dateStr;
         document.getElementById('modal-day-label').innerText = `${dateStr.replace(/-/g, '/')} の予定`;
@@ -680,38 +742,40 @@
 
         let hasAnySchedule = false;
 
-        // 登録されている予定だけを抽出してループ
-        categories.forEach(cat => {
-            cat.mids.forEach(mid => {
-                const scheduleKey = `${dateStr}_${cat.main}_${mid}`;
-                const data = schedules[scheduleKey];
+        // 保存された schedules オブジェクトから対象日のキーをスキャン
+        Object.keys(schedules).forEach(key => {
+            if (key.startsWith(dateStr)) {
+                const parts = key.split('_');
+                const main = parts[1];
+                const mid = parts[2];
+                const subKey = parts[3] || '';
+                const data = schedules[key];
                 
-                // データの入力があるもの（予定が入っているもの）だけを表示
                 if (data && (data.subCat || data.location || data.song || data.content)) {
                     hasAnySchedule = true;
                     const div = document.createElement('div');
                     div.className = 'day-schedule-item';
 
                     let tagClass = 'badge-default';
-                    if (cat.main === 'イベント') tagClass = 'badge-event';
-                    else if (cat.main === '楽曲制作') tagClass = 'badge-music';
-                    else if (cat.main === 'SNS') tagClass = 'badge-sns';
+                    if (main === 'イベント') tagClass = 'badge-event';
+                    else if (main === '楽曲制作') tagClass = 'badge-music';
+                    else if (main === 'SNS') tagClass = 'badge-sns';
 
                     div.innerHTML = `
-                        <span class="item-category-tag ${tagClass}">${cat.main} ＞ ${mid}</span>
-                        <div class="item-title">📍 ${data.subCat || '未設定'}</div>
+                        <span class="item-category-tag ${tagClass}">${main} ＞ ${mid}</span>
+                        <div class="item-title">📍 小分類: ${data.subCat || '未設定'}</div>
                         <div style="font-size:0.75rem; color:#555;">
                             ${data.location ? `🏠 場所: ${data.location}` : ''} 
                             ${data.song ? ` 🎵 楽曲: ${data.song}` : ''}
                         </div>
                         ${data.content ? `<div style="font-size:0.75rem; margin-top:6px; color:#333; background:#fff; padding:6px; border-radius:4px; border:1px solid #e0e0e0;">${data.content}</div>` : ''}
                         <div style="text-align: right; margin-top: 8px;">
-                            <button type="button" style="padding:4px 10px; font-size:0.75rem;" onclick="closeModalAndEdit('${dateStr}','${cat.main}','${mid}')">✏️ 編集/削除</button>
+                            <button type="button" style="padding:4px 10px; font-size:0.75rem;" onclick="closeModalAndEdit('${dateStr}','${main}','${mid}','${subKey}')">✏️ 編集/削除</button>
                         </div>
                     `;
                     listContainer.appendChild(div);
                 }
-            });
+            }
         });
 
         // もし1つも予定が登録されていなければ通知を表示
@@ -727,9 +791,9 @@
     }
 
     // カレンダー詳細画面内の個別予定の「編集」ボタンが押された時
-    window.closeModalAndEdit = function(dateStr, main, mid) {
+    window.closeModalAndEdit = function(dateStr, main, mid, subKey) {
         document.getElementById('modal-day-detail').classList.add('hidden');
-        openDirectEditForm(dateStr, main, mid);
+        openDirectEditForm(dateStr, main, mid, subKey);
     };
 
     // カレンダー詳細画面の「＋ 予定を追加する」ボタンが押された時
@@ -764,12 +828,14 @@
         // 新規登録時は削除ボタンを非表示にする
         document.getElementById('btn-delete-schedule').classList.add('hidden');
         document.getElementById('modal-edit-schedule').classList.remove('hidden');
+
+        activeCellInfo.subCatKey = ''; 
     }
 
-    // --- 共通：スケジュール編集フォームの展開（WBSマスや個別編集用） ---
-    function openDirectEditForm(dateStr, mainCat, midCat) {
-        activeCellInfo = { dateStr, mainCat, midCat };
-        const scheduleKey = `${dateStr}_${mainCat}_${midCat}`;
+    // --- 共通：スケジュール編集フォームの展開 ---
+    function openDirectEditForm(dateStr, mainCat, midCat, subCatKey) {
+        activeCellInfo = { dateStr, mainCat, midCat, subCatKey };
+        const scheduleKey = `${dateStr}_${mainCat}_${midCat}_${subCatKey}`;
         const data = schedules[scheduleKey] || { subCat: '', location: '', song: '', content: '' };
 
         document.getElementById('edit-date-label').innerText = dateStr.replace(/-/g, '/');
@@ -791,9 +857,9 @@
     // --- 共通：予定データの保存・消去 ---
     function handleScheduleSubmit(e) {
         e.preventDefault();
-        let { dateStr, mainCat, midCat } = activeCellInfo;
+        let { dateStr, mainCat, midCat, subCatKey } = activeCellInfo;
         
-        // セレクトボックスが表示されている（新規追加モード）の場合はそこから大・中分類を取得
+        // 新規追加モードの場合はセレクトボックスからパスを取得
         if (!document.getElementById('group-edit-cat-select').classList.contains('hidden')) {
             const selectVal = document.getElementById('select-target-cat-path').value;
             if(!selectVal) return;
@@ -802,16 +868,26 @@
             midCat = parts[1];
         }
 
-        const scheduleKey = `${dateStr}_${mainCat}_${midCat}`;
+        // 変更前（古いデータ）の参照キー
+        const oldKey = `${dateStr}_${mainCat}_${midCat}_${subCatKey}`;
+
         const subCat = document.getElementById('input-sub-cat-edit').value.trim();
         const location = document.getElementById('input-location').value.trim();
         const song = document.getElementById('input-song').value.trim();
         const content = document.getElementById('input-content').value.trim();
 
+        // 変更後（新しいデータ）のデータキー
+        const newKey = `${dateStr}_${mainCat}_${midCat}_${subCat}`;
+
         if (subCat || location || song || content) {
-            schedules[scheduleKey] = { subCat, location, song, content };
+            // 小分類名が書き換えられた場合は、不整合を防ぐため古い独立データを削除
+            if (oldKey !== newKey) {
+                delete schedules[oldKey];
+            }
+            schedules[newKey] = { subCat, location, song, content };
         } else {
-            delete schedules[scheduleKey];
+            delete schedules[oldKey];
+            delete schedules[newKey];
         }
 
         localStorage.setItem('ss_schedules2', JSON.stringify(schedules));
@@ -822,7 +898,7 @@
 
     function handleScheduleDelete() {
         if(!confirm("このマスの予定を削除しますか？")) return;
-        const scheduleKey = `${activeCellInfo.dateStr}_${activeCellInfo.mainCat}_${activeCellInfo.midCat}`;
+        const scheduleKey = `${activeCellInfo.dateStr}_${activeCellInfo.mainCat}_${activeCellInfo.midCat}_${activeCellInfo.subCatKey}`;
         delete schedules[scheduleKey];
         localStorage.setItem('ss_schedules2', JSON.stringify(schedules));
         renderAllViews();
@@ -851,9 +927,12 @@
             const parts = key.split('_');
             if(parts.length >= 3) {
                 let m = parts[1], d = parts[2];
+                let rest = parts.slice(3).join('_');
                 if(type === 'main' && m === main) m = newName;
                 if(type === 'mid' && m === main && d === mid) d = newName;
-                schedules[`${parts[0]}_${m}_${d}`] = oldSchedules[key];
+                
+                const newKey = rest ? `${parts[0]}_${m}_${d}_${rest}` : `${parts[0]}_${m}_${d}_`;
+                schedules[newKey] = oldSchedules[key];
             } else { schedules[key] = oldSchedules[key]; }
         });
 
