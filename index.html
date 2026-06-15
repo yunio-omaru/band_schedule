@@ -13,15 +13,28 @@
     <style>
         :root {
             --primary-color: #333333;
-            --category-bg: #ffff00; /* 大分類の背景色（黄色） */
-            --mid-category-bg: #f5f5f5; /* 中分類の背景色 */
-            --bg-color: #f4f6f7;
+            --bg-color: #f7f9fa;
             --card-bg: #ffffff;
-            --text-color: #222222;
-            --border-color: #bbbbbb; 
+            --text-color: #2c3e50;
+            --border-color: #dcdde1; /* 枠線を少し柔らかいグレーに */
+            
+            /* イベント系（ライブ・スタジオ等）のテーマカラー：華やかなコーラルオレンジ */
+            --bg-event-main: #ff7f50;
+            --bg-event-cell: #fff5f0;
+            --text-event-cell: #e65c00;
+
+            /* 楽曲制作系（リハ・制作等）のテーマカラー：落ち着いたアースグリーン */
+            --bg-music-main: #2ec4b6;
+            --bg-music-cell: #f0fdfa;
+            --text-music-cell: #0f766e;
+
+            /* その他の分類が追加された場合のデフォルトカラー */
+            --bg-default-main: #718093;
+            --bg-default-cell: #f8f9fa;
+            --text-default-cell: #2f3640;
         }
         body {
-            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -38,37 +51,37 @@
             margin-bottom: 20px;
             background: var(--card-bg);
             padding: 15px 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.03);
         }
-        h1 { font-size: 1.4rem; color: #111; margin: 0; }
+        h1 { font-size: 1.3rem; color: #1e272e; margin: 0; font-weight: bold; }
         
         /* 共通ボタンスタイル */
         button {
             cursor: pointer;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             padding: 10px 20px;
             font-weight: bold;
             font-size: 0.9rem;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
         }
         button:active {
             transform: translateY(1px);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
         }
-        .btn-main { background-color: #111111; color: white; border: 1px solid #111; }
-        .btn-main:hover { background-color: #444444; border-color: #444444; }
-        .btn-sub { background-color: #ffffff; color: #333333; border: 1px solid #cccccc; }
-        .btn-sub:hover { background-color: #f0f0f0; border-color: #bbbbbb; }
+        .btn-main { background-color: #2f3640; color: white; border: 1px solid #2f3640; }
+        .btn-main:hover { background-color: #1e272e; border-color: #1e272e; }
+        .btn-sub { background-color: #ffffff; color: #2f3640; border: 1px solid #dcdde1; }
+        .btn-sub:hover { background-color: #f5f6fa; border-color: #c2c3c9; }
 
         /* WBSテーブルコンテナ */
         .wbs-container {
             background: var(--card-bg);
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             margin-bottom: 20px;
             overflow-x: auto;
         }
@@ -76,7 +89,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         
         /* WBSテーブルスタイル */
@@ -88,27 +101,34 @@
         }
         table.wbs-table th, table.wbs-table td {
             border: 1px solid var(--border-color);
-            padding: 8px 4px;
+            padding: 10px 4px; /* 上下余白を少し広げて見やすく */
             text-align: center;
-            height: 30px;
+            height: 38px;
         }
         table.wbs-table th { 
-            background: #e8e8e8; 
+            background: #f1f2f6; 
             font-weight: bold; 
-            color: #333;
+            color: #57606f;
         }
-        table.wbs-table .col-main { width: 100px; text-align: left; font-weight: bold; }
-        table.wbs-table .col-mid { width: 100px; text-align: left; font-weight: bold; color: #444; }
-        table.wbs-table .col-sub { width: 120px; text-align: left; color: #555; }
+        table.wbs-table .col-main { width: 90px; text-align: left; font-weight: bold; }
+        table.wbs-table .col-mid { width: 90px; text-align: left; font-weight: bold; color: #57606f; background: #fafafa; }
+        table.wbs-table .col-sub { width: 110px; text-align: left; color: #2f3640; background: #fff; }
         
-        /* 大分類の行スタイル */
+        /* ★【修正】大分類の行スタイル（動的にクラスが付与されます） */
         table.wbs-table tr.category-row td {
-            background-color: var(--category-bg);
             font-weight: bold;
             text-align: left;
-            font-size: 0.9rem;
-            padding-left: 10px;
+            font-size: 0.95rem;
+            padding: 10px 15px;
+            color: white;
+            letter-spacing: 0.05em;
         }
+        /* イベント用の帯（コーラル） */
+        table.wbs-table tr.category-event td { background-color: var(--bg-event-main); }
+        /* 楽曲制作用の帯（ミントグリーン） */
+        table.wbs-table tr.category-music td { background-color: var(--bg-music-main); }
+        /* その他が追加された場合の帯（グレー） */
+        table.wbs-table tr.category-default td { background-color: var(--bg-default-main); }
 
         /* 日付マスのスタイル */
         table.wbs-table td.cell-day {
@@ -116,31 +136,38 @@
             transition: all 0.15s ease-in-out;
             font-size: 0.75rem;
             white-space: pre-wrap;
-            
-            /* 【修正ポイント】アルファベットも1文字ずつ綺麗に縦並びにする設定 */
             word-break: break-all;
             letter-spacing: 0.1em;
-            
             max-width: 45px;
             background: #ffffff;
             position: relative;
-            line-height: 1.2;
+            line-height: 1.3;
         }
         
-        /* 日付の枠ホバー(浮き上がり立体化) */
+        /* 日付の枠ホバー */
         table.wbs-table td.cell-day:hover { 
             background: #fffdf0 !important; 
-            box-shadow: 0 0 8px rgba(0, 0, 0, 0.3); 
-            transform: scale(1.08); 
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.25); 
+            transform: scale(1.12); 
             z-index: 10; 
-            border: 1px solid #ff8c00; 
-            border-radius: 2px;
+            border: 1px solid #ffa500; 
+            border-radius: 4px;
         }
         
-        /* データがあるマスの色 */
-        table.wbs-table td.cell-day.has-event { 
-            background: #e6f2ff; 
-            color: #0066cc; 
+        /* ★【修正】データがあるマスの色分け */
+        table.wbs-table td.cell-day.has-event-live { 
+            background: var(--bg-event-cell) !important; 
+            color: var(--text-event-cell); 
+            font-weight: bold;
+        }
+        table.wbs-table td.cell-day.has-event-music { 
+            background: var(--bg-music-cell) !important; 
+            color: var(--text-music-cell); 
+            font-weight: bold;
+        }
+        table.wbs-table td.cell-day.has-event-default { 
+            background: var(--bg-default-cell) !important; 
+            color: var(--text-default-cell); 
             font-weight: bold;
         }
 
@@ -148,7 +175,7 @@
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.4);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -157,21 +184,21 @@
         .modal-card {
             background: white;
             padding: 24px;
-            border-radius: 8px;
+            border-radius: 12px;
             width: 90%;
             max-width: 500px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
         }
-        .modal-card h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 2px solid #111; padding-bottom: 8px; }
+        .modal-card h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 2px solid #2f3640; padding-bottom: 8px; color: #2f3640; }
         .form-group { margin-bottom: 14px; }
-        .form-group label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 6px; color: #444; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 6px; color: #57606f; }
         .form-group input, .form-group select, .form-group textarea {
-            width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #bbb; border-radius: 4px; font-size: 0.9rem;
+            width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ced6e0; border-radius: 6px; font-size: 0.9rem;
         }
-        .form-group input:focus, .form-group textarea:focus { border-color: #111; outline: none; }
+        .form-group input:focus, .form-group textarea:focus { border-color: #2f3640; outline: none; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
         
-        .info-value { background: #fdfdfd; padding: 10px; border-radius: 4px; border: 1px solid #ddd; min-height: 1.2rem; white-space: pre-wrap; font-size: 0.95rem;}
+        .info-value { background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #e4e7eb; min-height: 1.2rem; white-space: pre-wrap; font-size: 0.95rem;}
         .hidden { display: none !important; }
     </style>
 </head>
@@ -300,7 +327,7 @@
     // --- 状態管理 ---
     let currentDate = new Date(2026, 5, 1); // 2026年6月スタート
     
-    // 分類データの初期構造（大 ＞ 中 ＞ 小）
+    // 分類データの初期構造
     let categories = JSON.parse(localStorage.getItem('bandCategories3')) || [
         { 
             main: 'イベント', 
@@ -340,10 +367,6 @@
         document.getElementById('form-schedule').addEventListener('submit', handleScheduleSubmit);
     });
 
-    function getFormattedDate(date) {
-        return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
-    }
-
     // --- WBSガントチャートの描画 ---
     function renderWBS() {
         const year = currentDate.getFullYear();
@@ -365,9 +388,17 @@
         tbody.innerHTML = '';
 
         categories.forEach(cat => {
+            // 大分類の行を追加（名前によって色クラスを出し分け）
             const catRow = document.createElement('tr');
             catRow.className = 'category-row';
-            catRow.innerHTML = `<td colspan="${numDays + 3}">${cat.main}</td>`;
+            if (cat.main.includes('イベント')) {
+                catRow.classList.add('category-event');
+            } else if (cat.main.includes('楽曲制作')) {
+                catRow.classList.add('category-music');
+            } else {
+                catRow.classList.add('category-default');
+            }
+            catRow.innerHTML = `<td colspan="${numDays + 3}">📢 ${cat.main}</td>`;
             tbody.appendChild(catRow);
 
             cat.mids.forEach(midObj => {
@@ -380,7 +411,6 @@
                     
                     const tdMid = document.createElement('td');
                     tdMid.className = 'col-mid';
-                    tdMid.style.background = var(--mid-category-bg);
                     tdMid.innerText = midObj.mid;
                     
                     const tdSub = document.createElement('td');
@@ -399,7 +429,14 @@
                         const scheduleKey = `${dateStr}_${cat.main}_${midObj.mid}_${sub}`;
                         
                         if (schedules[scheduleKey]) {
-                            cell.classList.add('has-event');
+                            // 大分類ごとに、スケジュールが入ったマスの色も出し分け
+                            if (cat.main.includes('イベント')) {
+                                cell.classList.add('has-event-live');
+                            } else if (cat.main.includes('楽曲制作')) {
+                                cell.classList.add('has-event-music');
+                            } else {
+                                cell.classList.add('has-event-default');
+                            }
                             cell.innerText = schedules[scheduleKey].location.split('\n')[0];
                         }
 
