@@ -98,7 +98,7 @@
         .month-title { font-weight: bold; font-size: 1.1rem; }
 
         /* ==========================================
-           【1】PC版 & スマホ横向き：WBS（表）スタイル 
+           WBS（表）スタイル 
            ========================================== */
         .wbs-view-wrapper {
             background: var(--card-bg);
@@ -106,11 +106,11 @@
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             overflow-x: auto;
-            max-height: 75vh; /* 縦スクロール時にヘッダーを固定するための高さ制限 */
+            max-height: 75vh;
         }
         table.wbs-table {
             width: 100%;
-            border-collapse: separate; /* stickyを正常に効かせるため collapse から変更 */
+            border-collapse: separate; 
             border-spacing: 0;
             font-size: 0.85rem;
             min-width: 1100px;
@@ -122,22 +122,20 @@
             text-align: center;
             height: 38px;
         }
-        /* 外枠の左と上用のボーダー補填 */
         table.wbs-table {
             border-left: 1px solid var(--border-color);
             border-top: 1px solid var(--border-color);
         }
 
-        /* 📌 表頭（ヘッダー行）固定のCSS設定 */
+        /* 📌 表頭（日付行）固定 */
         table.wbs-table thead th {
             position: sticky;
-            top: -21px; /* ラッパーのpadding相殺用調整 */
+            top: -21px; 
             background: #f1f2f6;
             font-weight: bold;
             color: #57606f;
             z-index: 20;
         }
-        /* 固定列の交差点(左上のヘッダー3マス)はz-indexをさらに高くする */
         table.wbs-table thead th.col-fixed-head {
             z-index: 30;
         }
@@ -169,7 +167,6 @@
         table.wbs-table td.cell-day.has-event-sns { background: var(--bg-sns-cell) !important; color: var(--text-sns-cell); font-weight: bold; }
         table.wbs-table td.cell-day.has-event-default { background: var(--bg-default-cell) !important; color: var(--text-default-cell); font-weight: bold; }
 
-        /* ☑ チェック時のグレーアウト状態スタイル */
         table.wbs-table tr.row-done td {
             background-color: #f1f2f6 !important;
             color: #a4b0be !important;
@@ -183,7 +180,7 @@
         .wbs-checkbox { transform: scale(1.2); cursor: pointer; }
 
         /* ==========================================
-           【2】スマホ縦向き：カレンダー スタイル 
+           カレンダー スタイル 
            ========================================== */
         .calendar-view-wrapper {
             background: var(--card-bg);
@@ -225,9 +222,7 @@
         .badge-sns { background-color: var(--bg-sns-main); }
         .badge-default { background-color: var(--bg-default-main); }
 
-        /* ==========================================
-           【3】レスポンシブ画面切り替えロジック (Media Query)
-           ========================================== */
+        /* レスポンシブ切り替え */
         .wbs-view-wrapper { display: none; }
         .calendar-view-wrapper { display: block; }
 
@@ -236,7 +231,7 @@
             .calendar-view-wrapper { display: none; }
         }
 
-        /* モーダル関連全般 */
+        /* モーダル */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4);
             display: flex; justify-content: center; align-items: center; z-index: 1000;
@@ -260,8 +255,43 @@
         .empty-notice { padding: 30px; text-align: center; color: #7f8c8d; font-size: 0.9rem; font-weight: bold; }
         .hidden { display: none !important; }
 
-        /* 🎸 複数楽曲用動的フォームデザイン */
         .song-inputs-container { display: flex; flex-direction: column; gap: 6px; }
+
+        /* 📆 複数一括日付選択用のミニカレンダーグリッド */
+        .multi-date-selector {
+            background: #f5f6fa;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 6px;
+        }
+        .multi-date-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-top: 6px;
+        }
+        .multi-date-item {
+            background: white;
+            border: 1px solid #ced6e0;
+            border-radius: 4px;
+            padding: 4px;
+            text-align: center;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .multi-date-item input {
+            margin: 2px 0 0 0;
+            cursor: pointer;
+            width: auto;
+        }
+        .multi-date-item:hover {
+            background: #e1f5fe;
+        }
     </style>
 </head>
 <body>
@@ -369,7 +399,7 @@
         <h2>スケジュールの入力・編集</h2>
         <form id="form-schedule-save">
             <div class="form-group"><label>日付</label><div id="edit-date-label" style="font-weight:bold;"></div></div>
-            <div class="form-group" id="group-edit-cat-select" class="hidden">
+            <div class="form-group hidden" id="group-edit-cat-select">
                 <label>登録先の分類行を選択</label>
                 <select id="select-target-cat-path"></select>
             </div>
@@ -396,6 +426,17 @@
 
             <div class="form-group"><label>内容詳細</label><textarea id="input-content" rows="3"></textarea></div>
             
+            <div class="form-group" style="margin-top: 15px; background: #fdfaf6; padding: 10px; border-radius: 8px; border: 1px dashed #ffa500;">
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #d35400;">
+                    <input type="checkbox" id="chk-multi-date" style="width: auto; transform: scale(1.2);">
+                    📅 別日もまとめて同じ内容で登録する
+                </label>
+                <div id="area-multi-date-picker" class="multi-date-selector hidden">
+                    <span style="font-size: 0.75rem; color: #666;">この月にまとめて登録したい日付にチェックを入れてください：</span>
+                    <div id="multi-date-grid-container" class="multi-date-grid"></div>
+                </div>
+            </div>
+
             <div class="modal-actions" style="justify-content: space-between;">
                 <button type="button" id="btn-delete-schedule" style="color:red; border-color:red;">削除</button>
                 <div>
@@ -465,7 +506,18 @@
         document.getElementById('form-schedule-save').addEventListener('submit', handleScheduleSubmit);
         document.getElementById('btn-delete-schedule').addEventListener('click', handleScheduleDelete);
 
-        // 分類名そのものの編集・削除
+        // 一括チェックボックス開閉
+        document.getElementById('chk-multi-date').addEventListener('change', (e) => {
+            const area = document.getElementById('area-multi-date-picker');
+            if (e.target.checked) {
+                area.classList.remove('hidden');
+                generateMultiDateGrid();
+            } else {
+                area.classList.add('hidden');
+            }
+        });
+
+        // 分類名編集・削除
         document.getElementById('btn-cancel-cat-edit').addEventListener('click', () => document.getElementById('modal-edit-category').classList.add('hidden'));
         document.getElementById('form-edit-cat-name').addEventListener('submit', handleCategoryNameUpdate);
         document.getElementById('btn-delete-cat').addEventListener('click', handleCategoryDelete);
@@ -558,7 +610,6 @@
         const headerRow = document.getElementById('table-header-days');
         const tbody = document.getElementById('wbs-tbody');
 
-        // 固定列ヘッダーの区別用にクラスを追加
         headerRow.innerHTML = `
             <th class="col-done col-fixed-head">☑</th>
             <th class="col-main col-fixed-head">大分類</th>
@@ -601,12 +652,10 @@
                     });
                 }
 
-                // ① 中分類メイン行
                 const row = document.createElement('tr');
                 const rowKey = `${cat.main}_${mid}`;
                 if (doneRows.includes(rowKey)) row.classList.add('row-done');
 
-                // チェックボックス用セル
                 const tdDone = document.createElement('td');
                 tdDone.className = 'col-done';
                 const chk = document.createElement('input');
@@ -645,13 +694,11 @@
                 }
                 tbody.appendChild(row);
 
-                // ② 自動追加される小分類行
                 uniqueSubCats.forEach(subCatName => {
                     const subRow = document.createElement('tr');
                     const subRowKey = `${cat.main}_${mid}_${subCatName}`;
                     if (doneRows.includes(subRowKey)) subRow.classList.add('row-done');
 
-                    // 小分類用のチェックボックスセル
                     const tdSubDone = document.createElement('td');
                     tdSubDone.className = 'col-done';
                     const subChk = document.createElement('input');
@@ -698,7 +745,6 @@
         });
     }
 
-    // 行のグレーアウト状態を切り替える関数
     function toggleRowDone(rowKey, isChecked) {
         if (isChecked) {
             if (!doneRows.includes(rowKey)) doneRows.push(rowKey);
@@ -759,7 +805,6 @@
                 const parts = key.split('_');
                 const mainCat = parts[1];
                 const midCat = parts[2];
-                const subCatName = parts[3] || '';
                 const data = schedules[key];
 
                 if (data) {
@@ -909,7 +954,10 @@
         document.getElementById('input-content').value = '';
         document.getElementById('btn-delete-schedule').classList.add('hidden');
         
-        // サジェスト候補データを全読み込みして設定
+        // 一括日付の初期化
+        document.getElementById('chk-multi-date').checked = false;
+        document.getElementById('area-multi-date-picker').classList.add('hidden');
+
         setupSubCatDatalist('', '');
         setupLocationAndSongDatalist();
 
@@ -926,7 +974,7 @@
         }
     }
 
-    // --- 共通：スケジュール編集フォームの展開 ---
+    // --- スケジュール編集フォームの展開 ---
     function openDirectEditForm(dateStr, mainCat, midCat, subCatKey) {
         activeCellInfo = { dateStr, mainCat, midCat, subCatKey };
         const scheduleKey = `${dateStr}_${mainCat}_${midCat}_${subCatKey}`;
@@ -950,14 +998,46 @@
         document.getElementById('input-content').value = data.content || '';
         document.getElementById('btn-delete-schedule').classList.remove('hidden');
 
-        // 各種プルダウン（サジェスト候補）を構築
+        // 一括日付の初期化
+        document.getElementById('chk-multi-date').checked = false;
+        document.getElementById('area-multi-date-picker').classList.add('hidden');
+
         setupSubCatDatalist(mainCat, midCat);
         setupLocationAndSongDatalist();
 
         document.getElementById('modal-edit-schedule').classList.remove('hidden');
     }
 
-    // 小分類の既存データサジェスト用プルダウンを構成
+    // 📅 一括登録用：その月の日付チェックボックスリストを動的生成
+    function generateMultiDateGrid() {
+        const container = document.getElementById('multi-date-grid-container');
+        container.innerHTML = '';
+
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const totalDays = new Date(year, month + 1, 0).getDate();
+        
+        const baseDay = parseInt(activeCellInfo.dateStr.split('-')[2], 10);
+
+        for (let d = 1; d <= totalDays; d++) {
+            // 現在メインで選んでいる日付は選択不要（または固定）なのでスキップ、またはチェック不可に
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            
+            const label = document.createElement('label');
+            label.className = 'multi-date-item';
+            if (d === baseDay) {
+                label.style.background = '#e0e0e0';
+                label.style.cursor = 'not-allowed';
+            }
+
+            label.innerHTML = `
+                <span>${d}日</span>
+                <input type="checkbox" class="cb-target-multidate" value="${dateStr}" ${d === baseDay ? 'checked disabled' : ''}>
+            `;
+            container.appendChild(label);
+        }
+    }
+
     function setupSubCatDatalist(mainCat, midCat) {
         const datalist = document.getElementById('datalist-sub-cats');
         datalist.innerHTML = '';
@@ -981,7 +1061,6 @@
         });
     }
 
-    // 💡 場所名と楽曲名のマスター用サジェスト生成関数
     function setupLocationAndSongDatalist() {
         const locationDatalist = document.getElementById('datalist-locations');
         const songDatalist = document.getElementById('datalist-songs');
@@ -992,27 +1071,23 @@
         const locationSet = new Set();
         const songSet = new Set();
 
-        // 登録されている全予定からデータをスキャン収集
         Object.keys(schedules).forEach(key => {
             const data = schedules[key];
             if (data) {
                 if (data.location) locationSet.add(data.location.trim());
                 if (data.song) {
-                    // カンマ区切りで登録されている楽曲名を分解して収集
                     const splitSongs = data.song.split(/[,\n、]/).map(s => s.trim()).filter(s => s !== "");
                     splitSongs.forEach(s => songSet.add(s));
                 }
             }
         });
 
-        // 場所のdatalistへ反映
         locationSet.forEach(loc => {
             const opt = document.createElement('option');
             opt.value = loc;
             locationDatalist.appendChild(opt);
         });
 
-        // 楽曲のdatalistへ反映
         songSet.forEach(song => {
             const opt = document.createElement('option');
             opt.value = song;
@@ -1020,7 +1095,6 @@
         });
     }
 
-    // 🎵 楽曲の動的枠生成用ロジック
     function setSongInputs(songArray) {
         const wrapper = document.getElementById('song-inputs-wrapper');
         wrapper.innerHTML = '';
@@ -1039,7 +1113,6 @@
         input.className = 'input-song-item';
         input.placeholder = '楽曲名を入力';
         input.value = value;
-        // 💡 共通の楽曲用datalistを紐付け
         input.setAttribute('list', 'datalist-songs');
 
         input.addEventListener('input', () => {
@@ -1053,7 +1126,7 @@
         wrapper.appendChild(input);
     }
 
-    // --- 共通：予定データの保存・消去 ---
+    // --- 予定データの保存 ---
     function handleScheduleSubmit(e) {
         e.preventDefault();
         let { dateStr, mainCat, midCat, subCatKey } = activeCellInfo;
@@ -1066,8 +1139,6 @@
             midCat = parts[1];
         }
 
-        const oldKey = `${dateStr}_${mainCat}_${midCat}_${subCatKey}`;
-
         const subCat = document.getElementById('input-sub-cat-edit').value.trim();
         const location = document.getElementById('input-location').value.trim();
         
@@ -1078,18 +1149,41 @@
             if(val) songVals.push(val);
         });
         const song = songVals.join(', ');
-
         const content = document.getElementById('input-content').value.trim();
-        const newKey = `${dateStr}_${mainCat}_${midCat}_${subCat}`;
+
+        // 📅 一括登録が有効かどうか判別
+        const isMultiDate = document.getElementById('chk-multi-date').checked;
+        let targetDates = [dateStr]; // デフォルトは現在の選択日のみ
+
+        if (isMultiDate) {
+            const checkedBoxes = document.querySelectorAll('.cb-target-multidate:checked');
+            targetDates = Array.from(checkedBoxes).map(cb => cb.value);
+        }
+
+        // 既存の単発キー（名前が変わる前の古いデータ消去用）
+        const oldKey = `${dateStr}_${mainCat}_${midCat}_${subCatKey}`;
 
         if (subCat || location || song || content) {
-            if (oldKey !== newKey) {
+            // 単発編集で小分類名が変わった場合の旧キー削除
+            if (!isMultiDate && oldKey !== `${dateStr}_${mainCat}_${midCat}_${subCat}`) {
                 delete schedules[oldKey];
             }
-            schedules[newKey] = { subCat, location, song, content };
+
+            // 選択されたすべての対象日にデータを書き込み
+            targetDates.forEach(dStr => {
+                const newKey = `${dStr}_${mainCat}_${midCat}_${subCat}`;
+                schedules[newKey] = { subCat, location, song, content };
+            });
         } else {
-            delete schedules[oldKey];
-            delete schedules[newKey];
+            // すべて空欄にされた場合は削除
+            if (!isMultiDate) {
+                delete schedules[oldKey];
+            } else {
+                targetDates.forEach(dStr => {
+                    const newKey = `${dStr}_${mainCat}_${midCat}_${subCat}`;
+                    delete schedules[newKey];
+                });
+            }
         }
 
         localStorage.setItem('ss_schedules2', JSON.stringify(schedules));
