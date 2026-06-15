@@ -3,87 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>迎撃乙女バンドカレンダー</title>
+    <title>迎撃乙女バンド スケジュール＆カレンダー</title>
     <style>
         :root {
-            --bg-color: #f1f3f4;
+            --bg-color: #f7f9fa;
             --card-bg: #ffffff;
-            --text-color: #3c4043;
+            --text-color: #2c3e50;
             --border-color: #dadce0;
             --sunday-color: #d93025;
             --saturday-color: #1a73e8;
+
+            /* テーマカラー（メイン） */
+            --bg-event-main: #ff7f50; 
+            --bg-event-cell: #fff5f0;
+            --text-event-cell: #e65c00;
             
-            /* 分類ごとのバッジカラー */
-            --bg-event: #ff7f50; 
-            --bg-music: #2ec4b6; 
-            --bg-sns: #9b59b6; 
-            --bg-default: #718093;
+            --bg-music-main: #2ec4b6; 
+            --bg-music-cell: #f0fdfa;
+            --text-music-cell: #0f766e;
+            
+            --bg-sns-main: #9b59b6; 
+            --bg-sns-cell: #fbf0f0;
+            --text-sns-cell: #8e44ad;
+            
+            --bg-default-main: #718093; 
+            --bg-default-cell: #f8f9fa;
+            --text-default-cell: #2f3640;
         }
         * { box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            padding: 10px;
+            padding: 15px;
         }
-        .container { max-width: 600px; margin: 0 auto; }
+        .container { max-width: 100%; margin: 0 auto; }
         
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             background: var(--card-bg);
-            padding: 12px 15px;
-            border-radius: 8px;
-            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3);
-            margin-bottom: 10px;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+            margin-bottom: 15px;
         }
-        h1 { font-size: 1.1rem; margin: 0; font-weight: 600; }
+        h1 { font-size: 1.2rem; margin: 0; font-weight: bold; }
         
         button {
             cursor: pointer;
             border: 1px solid var(--border-color);
             background: #fff;
-            border-radius: 4px;
-            padding: 6px 12px;
-            font-weight: 500;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-weight: bold;
             font-size: 0.85rem;
-            color: #3c4043;
+            color: #2f3640;
+            transition: all 0.2s ease;
         }
-        button:active { background: #f1f3f4; }
-        .btn-sync { background: #e6f4ea; color: #137333; border-color: #ceead6; font-weight: bold; }
-        .btn-main { background: #1a73e8; color: #fff; border: none; }
+        button:active { transform: translateY(1px); }
+        .btn-sync { background-color: #27ae60; color: white; border: none; margin-right: 8px; }
+        .btn-sync:hover { background-color: #219a52; }
+        .btn-main { background-color: #2f3640; color: white; border: none; }
+        .btn-main:hover { background-color: #1e272e; }
+        .btn-sub { background-color: #ffffff; color: #2f3640; }
+        .btn-sub:hover { background-color: #f5f6fa; }
+        .btn-danger { background-color: #e74c3c; color: white; border: none; }
 
         .sync-status-bar {
-            font-size: 0.75rem;
+            font-size: 0.85rem;
             font-weight: bold;
-            color: #137333;
-            background: #e6f4ea;
-            padding: 6px 12px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            display: block;
+            color: #27ae60;
+            background: #e8f5e9;
+            padding: 8px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: inline-block;
+            width: 100%;
             text-align: center;
         }
 
-        /* カレンダー本体 */
-        .calendar-container {
-            background: var(--card-bg);
-            border-radius: 8px;
-            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3);
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-        .calendar-header {
+        .month-selector {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
-            padding: 0 5px;
+            margin-bottom: 15px;
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
-        .calendar-month-title { font-weight: bold; font-size: 1.2rem; }
+        .month-title { font-weight: bold; font-size: 1.1rem; }
+
+        /* ==========================================
+           【1】PC版 & スマホ横向き：WBS（表）スタイル 
+           ========================================== */
+        .wbs-view-wrapper {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            overflow-x: auto;
+        }
+        table.wbs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            min-width: 1000px;
+        }
+        table.wbs-table th, table.wbs-table td {
+            border: 1px solid var(--border-color);
+            padding: 10px 4px; 
+            text-align: center;
+            height: 38px;
+        }
+        table.wbs-table th { background: #f1f2f6; font-weight: bold; color: #57606f;}
+        table.wbs-table .col-main { width: 100px; text-align: left; font-weight: bold; }
+        table.wbs-table .col-mid { width: 150px; text-align: left; font-weight: bold; color: #57606f; background: #fafafa; cursor: pointer; }
+        table.wbs-table .col-mid:hover { background: #e0e0e0 !important; }
         
+        table.wbs-table tr.category-row td {
+            font-weight: bold; text-align: left; font-size: 0.95rem; padding: 10px 15px; color: white; cursor: pointer;
+        }
+        table.wbs-table tr.category-row td:hover { opacity: 0.85; text-decoration: underline; }
+        table.wbs-table tr.category-event td { background-color: var(--bg-event-main); }
+        table.wbs-table tr.category-music td { background-color: var(--bg-music-main); }
+        table.wbs-table tr.category-sns td { background-color: var(--bg-sns-main); }
+        table.wbs-table tr.category-default td { background-color: var(--bg-default-main); }
+
+        table.wbs-table td.cell-day {
+            cursor: pointer; transition: all 0.15s ease-in-out; font-size: 0.75rem;
+            white-space: pre-wrap; word-break: break-all; max-width: 45px; background: #ffffff; position: relative;
+        }
+        table.wbs-table td.cell-day:hover { 
+            background: #fffdf0 !important; box-shadow: 0 0 10px rgba(0, 0, 0, 0.25); 
+            transform: scale(1.15); z-index: 10; border: 1px solid #ffa500; border-radius: 4px;
+        }
+        table.wbs-table td.cell-day.has-event-live { background: var(--bg-event-cell) !important; color: var(--text-event-cell); font-weight: bold; }
+        table.wbs-table td.cell-day.has-event-music { background: var(--bg-music-cell) !important; color: var(--text-music-cell); font-weight: bold; }
+        table.wbs-table td.cell-day.has-event-sns { background: var(--bg-sns-cell) !important; color: var(--text-sns-cell); font-weight: bold; }
+        table.wbs-table td.cell-day.has-event-default { background: var(--bg-default-cell) !important; color: var(--text-default-cell); font-weight: bold; }
+
+        /* ==========================================
+           【2】スマホ縦向き：カレンダー スタイル 
+           ========================================== */
+        .calendar-view-wrapper {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 10px;
+        }
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -91,127 +162,113 @@
             border-left: 1px solid var(--border-color);
         }
         .weekday-label {
-            background: #f8f9fa;
-            text-align: center;
-            font-size: 0.75rem;
-            font-weight: bold;
-            padding: 6px 0;
-            border-right: 1px solid var(--border-color);
-            border-bottom: 1px solid var(--border-color);
+            background: #f8f9fa; text-align: center; font-size: 0.75rem; font-weight: bold; padding: 6px 0;
+            border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);
         }
         .weekday-label:nth-child(7) { color: var(--saturday-color); }
         .weekday-label:nth-child(1) { color: var(--sunday-color); }
 
         .calendar-day {
-            min-height: 75px;
-            background: #fff;
-            padding: 4px;
-            border-right: 1px solid var(--border-color);
-            border-bottom: 1px solid var(--border-color);
-            position: relative;
-            cursor: pointer;
+            min-height: 70px; background: #fff; padding: 4px;
+            border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);
+            position: relative; cursor: pointer;
         }
         .calendar-day:active { background: #f1f3f4; }
         .calendar-day.other-month { background: #f8f9fa; color: #9aa0a6; }
-        .day-number { font-size: 0.8rem; font-weight: 500; margin-bottom: 4px; }
-        
-        /* 土日の日付の色 */
+        .day-number { font-size: 0.8rem; font-weight: bold; margin-bottom: 4px; }
         .calendar-grid .calendar-day:nth-child(7n) .day-number { color: var(--saturday-color); }
         .calendar-grid .calendar-day:nth-child(7n-6) .day-number { color: var(--sunday-color); }
 
-        /* カレンダー内の予定ドット/バッジ */
-        .event-badges-container {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            overflow: hidden;
-        }
+        .event-badges-container { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
         .day-badge {
-            font-size: 0.65rem;
-            color: white;
-            padding: 1px 3px;
-            border-radius: 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-weight: bold;
+            font-size: 0.6rem; color: white; padding: 1px 2px; border-radius: 2px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: bold;
         }
-        .badge-event { background-color: var(--bg-event); }
-        .badge-music { background-color: var(--bg-music); }
-        .badge-sns { background-color: var(--bg-sns); }
-        .badge-default { background-color: var(--bg-default); }
+        .badge-event { background-color: var(--bg-event-main); }
+        .badge-music { background-color: var(--bg-music-main); }
+        .badge-sns { background-color: var(--bg-sns-main); }
+        .badge-default { background-color: var(--bg-default-main); }
 
-        /* モーダル */
+        /* ==========================================
+           【3】レスポンシブ画面切り替えロジック (Media Query)
+           ========================================== */
+        .wbs-view-wrapper { display: none; }
+        .calendar-view-wrapper { display: block; }
+
+        @media screen and (min-width: 768px), screen and (orientation: landscape) {
+            .wbs-view-wrapper { display: block; }
+            .calendar-view-wrapper { display: none; }
+        }
+
+        /* モーダル関連全般 */
         .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);
-            display: flex; justify-content: center; align-items: flex-end; z-index: 1000;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4);
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
         }
-        .modal-card { 
-            background: white; padding: 20px; 
-            border-radius: 16px 16px 0 0; width: 100%; max-width: 600px; 
-            box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
-            max-height: 85vh; overflow-y: auto;
+        @media screen and (max-width: 600px) and (orientation: portrait) {
+            .modal-overlay { align-items: flex-end; }
+            .modal-card { border-radius: 16px 16px 0 0 !important; width: 100% !important; max-width: 100% !important; }
         }
-        .modal-card h2 { margin-top: 0; font-size: 1.1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
-        
+        .modal-card { background: white; padding: 24px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto;}
+        .modal-card h2 { margin-top: 0; font-size: 1.1rem; border-bottom: 2px solid #2f3640; padding-bottom: 8px; color: #2f3640; }
         .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 4px; color: #5f6368; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.9rem; }
-        
+        .form-group label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 4px; color: #57606f; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px; border: 1px solid #ced6e0; border-radius: 6px; font-size: 0.9rem; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
+        .info-value { background: #f8f9fa; padding: 8px; border-radius: 6px; border: 1px solid #e4e7eb; min-height: 1.2rem; white-space: pre-wrap; font-size: 0.9rem;}
+        
+        .day-schedule-item { border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; margin-bottom: 10px; background: #f8f9fa; }
+        .item-category-tag { display: inline-block; font-size: 0.65rem; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-bottom: 6px; }
+        .item-title { font-weight: bold; font-size: 0.9rem; margin-bottom: 4px; color: #2c3e50; }
+        
+        .empty-notice { padding: 30px; text-align: center; color: #7f8c8d; font-size: 0.9rem; font-weight: bold; }
         .hidden { display: none !important; }
-
-        /* 日付タップ時の予定リスト */
-        .day-schedule-item {
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 10px;
-            margin-bottom: 8px;
-            background: #f8f9fa;
-        }
-        .item-category-tag {
-            display: inline-block;
-            font-size: 0.7rem;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
-        .item-title { font-weight: bold; font-size: 0.9rem; margin-bottom: 2px; }
-        .item-details { font-size: 0.8rem; color: #5f6368; white-space: pre-wrap; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1>🎸 迎撃乙女スケジュール</h1>
+        <h1>🎸 迎撃乙女バンド スケジュール</h1>
         <div>
-            <button id="btn-cloud-load" class="btn-sync">🔄 更新</button>
-            <button id="btn-open-menu" class="btn-main">行を追加</button>
+            <button id="btn-cloud-load" class="btn-sync">🔄 同期</button>
+            <button id="btn-open-menu" class="btn-main">分類行を追加</button>
         </div>
     </header>
 
     <div id="sync-status" class="sync-status-bar">🔄 スプレッドシートからデータを読み込み中...</div>
 
-    <div class="calendar-container">
-        <div class="calendar-header">
-            <button id="btn-prev-month">◀</button>
-            <span id="calendar-month-title" class="calendar-month-title">2026年6月</span>
-            <button id="btn-next-month">▶</button>
-        </div>
-        <div class="calendar-grid" id="calendar-grid-body">
-            </div>
+    <div class="month-selector">
+        <button id="btn-prev-month" class="btn-sub">◀ 前月</button>
+        <span id="current-month-label" class="month-title">2026年6月</span>
+        <button id="btn-next-month" class="btn-sub">次月 ▶</button>
+    </div>
+
+    <div id="div-empty-notice" class="empty-notice hidden">
+        右上の「分類行を追加」からベースの活動行を登録すると、スケジュール表が生成されます！
+    </div>
+
+    <!-- 【パターンA】PC版 / 横画面用：WBSビュー -->
+    <div class="wbs-view-wrapper" id="wbs-view-area">
+        <table class="wbs-table">
+            <thead><tr id="table-header-days"></tr></thead>
+            <tbody id="wbs-tbody"></tbody>
+        </table>
+    </div>
+
+    <!-- 【パターンB】スマホ縦画面用：Googleカレンダー風ビュー -->
+    <div class="calendar-view-wrapper" id="calendar-view-area">
+        <div class="calendar-grid" id="calendar-grid-body"></div>
     </div>
 </div>
 
+<!-- モーダル1：大・中分類（行）の新規追加画面 -->
 <div id="modal-menu" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>分類行（予定のベース）の追加</h2>
         <form id="form-category">
             <div class="form-group">
-                <label>大分類名 *</label>
+                <label>大分類名 *必須</label>
                 <select id="select-main-cat">
                     <option value="イベント">イベント</option>
                     <option value="楽曲制作">楽曲制作</option>
@@ -237,42 +294,68 @@
                 <input type="text" id="input-mid-cat">
             </div>
             <div class="modal-actions">
-                <button type="button" id="btn-close-menu">閉じる</button>
-                <button type="submit" class="btn-main">追加する</button>
+                <button type="button" id="btn-close-menu" class="btn-sub">閉じる</button>
+                <button type="submit" class="btn-main">この行を追加</button>
             </div>
         </form>
     </div>
 </div>
 
-<div id="modal-day-detail" class="modal-overlay hidden">
+<!-- モーダル2：詳細閲覧画面 (WBSセルのタップで展開) -->
+<div id="modal-detail" class="modal-overlay hidden">
     <div class="modal-card">
-        <h2 id="modal-day-label">2026/06/01 の予定</h2>
-        
-        <div id="day-schedules-list"></div>
-        
+        <h2>予定の詳細</h2>
+        <div class="form-group"><label>日付</label><div id="view-date" class="info-value"></div></div>
+        <div class="form-group"><label>分類</label><div id="view-category" class="info-value"></div></div>
+        <div class="form-group"><label>小分類（項目名）</label><div id="view-sub-cat" class="info-value"></div></div>
+        <div class="form-group"><label>場所</label><div id="view-location" class="info-value"></div></div>
+        <div class="form-group"><label>楽曲</label><div id="view-song" class="info-value"></div></div>
+        <div class="form-group"><label>内容詳細</label><div id="view-content" class="info-value"></div></div>
         <div class="modal-actions">
-            <button type="button" id="btn-close-day-modal" style="width: 100%; padding: 10px;">閉じる</button>
+            <button type="button" id="btn-close-detail" class="btn-sub">閉じる</button>
+            <button type="button" id="btn-go-edit" class="btn-main">編集する</button>
         </div>
     </div>
 </div>
 
+<!-- モーダル3：スマホカレンダー用：特定日の予定一覧ポップアップ -->
+<div id="modal-day-detail" class="modal-overlay hidden">
+    <div class="modal-card">
+        <h2 id="modal-day-label">予定一覧</h2>
+        <div id="day-schedules-list"></div>
+        <div class="modal-actions" style="margin-top: 15px; display: flex; gap: 10px;">
+            <button type="button" id="btn-close-day-modal" class="btn-sub" style="flex: 1;">閉じる</button>
+            <button type="button" id="btn-add-any-schedule" class="btn-main" style="flex: 1;">＋ 予定を追加する</button>
+        </div>
+    </div>
+</div>
+
+<!-- モーダル4：スケジュール個別入力・編集メイン画面 (共通) -->
 <div id="modal-edit-schedule" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>スケジュールの入力・編集</h2>
         <form id="form-schedule-save">
-            <div class="form-group"><label>対象の分類行</label><div id="edit-cat-path-label" style="font-weight: bold; font-size: 0.95rem;"></div></div>
+            <div class="form-group"><label>日付</label><div id="edit-date-label" style="font-weight:bold;"></div></div>
+            <div class="form-group" id="group-edit-cat-select" class="hidden">
+                <label>登録先の分類行を選択</label>
+                <select id="select-target-cat-path"></select>
+            </div>
+            <div class="form-group" id="group-edit-cat-label">
+                <label>対象の分類行</label>
+                <div id="edit-cat-path-label" style="font-weight: bold; color: #555;"></div>
+            </div>
             <div class="form-group">
-                <label>小分類（項目名）</label>
-                <input type="text" id="input-sub-cat-edit" required>
+                <label>小分類（項目名） *必須</label>
+                <input type="text" id="input-sub-cat-edit" required placeholder="例: 新宿LOFTワンマン、新曲Aレコーディングなど">
             </div>
             <div class="form-group"><label>場所</label><input type="text" id="input-location"></div>
             <div class="form-group"><label>楽曲</label><input type="text" id="input-song"></div>
             <div class="form-group"><label>内容詳細</label><textarea id="input-content" rows="3"></textarea></div>
             
             <div class="modal-actions" style="justify-content: space-between;">
-                <button type="button" id="btn-delete-schedule" style="color:red; border-color:red;">削除する</button>
+                <button type="button" id="btn-delete-schedule" style="color:red; border-color:red;">削除</button>
                 <div>
-                    <button type="button" id="btn-cancel-schedule-edit">キャンセル</button>
+                    <button type="button" id="btn-cancel-schedule-edit" class="btn-sub">キャンセル</button>
                     <button type="submit" class="btn-main">保存</button>
                 </div>
             </div>
@@ -280,49 +363,76 @@
     </div>
 </div>
 
+<!-- モーダル5：WBS大・中分類の変更・削除用画面 -->
+<div id="modal-edit-category" class="modal-overlay hidden">
+    <div class="modal-card">
+        <h2>分類行の変更・削除</h2>
+        <form id="form-edit-cat-name">
+            <div class="form-group">
+                <label id="label-edit-cat-type">分類名</label>
+                <input type="text" id="input-edit-cat-name" required>
+            </div>
+            <div class="modal-actions" style="justify-content: space-between;">
+                <button type="button" id="btn-delete-cat" class="btn-danger">この行を削除</button>
+                <div>
+                    <button type="button" id="btn-cancel-cat-edit" class="btn-sub">キャンセル</button>
+                    <button type="submit" class="btn-main">変更を保存</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-    // 🔗 連携済みのGASウェブアプリURL
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxv0ihYoz9jQNEZCuO_8-XgDCFOluRxyDWATD4gsWa7dGjMpI4KfCAx_R4JPqSHRQziSQ/exec";
 
-    let currentDate = new Date(2026, 5, 1); // 2026年6月スタート
+    let currentDate = new Date(2026, 5, 1); 
     let categories = []; 
-    let schedules = {};  // キー: YYYY-MM-DD_大分類_中分類
-    let selectedDateStr = "";
-    let selectedCatInfo = { main: "", mid: "" };
+    let schedules = {};  
+    let activeCellInfo = { dateStr: '', mainCat: '', midCat: '' }; 
+    let activeCatEditInfo = { type: '', main: '', mid: '' }; 
 
     document.addEventListener('DOMContentLoaded', () => {
         categories = JSON.parse(localStorage.getItem('ss_categories2')) || [];
         schedules = JSON.parse(localStorage.getItem('ss_schedules2')) || {};
-        renderCalendar();
+        
+        renderAllViews();
         updateFormInputs();
         loadFromSpreadsheet();
 
         // 月移動
-        document.getElementById('btn-prev-month').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
-        document.getElementById('btn-next-month').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
+        document.getElementById('btn-prev-month').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderAllViews(); });
+        document.getElementById('btn-next-month').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderAllViews(); });
         
-        // 分類行追加モーダル
+        // 分類追加
         document.getElementById('btn-open-menu').addEventListener('click', () => { document.getElementById('modal-menu').classList.remove('hidden'); updateFormInputs(); });
         document.getElementById('btn-close-menu').addEventListener('click', () => document.getElementById('modal-menu').classList.add('hidden'));
         document.getElementById('select-main-cat').addEventListener('change', updateFormInputs);
-        document.getElementById('select-mid-cat').addEventListener('change', (e) => {
-            if (e.target.value === '__other_mid__') document.getElementById('group-mid-text').classList.remove('hidden');
-            else if (document.getElementById('select-main-cat').value === 'イベント') document.getElementById('group-mid-text').classList.add('hidden');
-        });
         document.getElementById('form-category').addEventListener('submit', handleCategorySubmit);
 
-        // スケジュール閲覧・編集モーダル
+        // 閲覧・編集モーダル開閉
+        document.getElementById('btn-close-detail').addEventListener('click', () => document.getElementById('modal-detail').classList.add('hidden'));
+        document.getElementById('btn-go-edit').addEventListener('click', transitDetailToEdit);
         document.getElementById('btn-close-day-modal').addEventListener('click', () => document.getElementById('modal-day-detail').classList.add('hidden'));
         document.getElementById('btn-cancel-schedule-edit').addEventListener('click', () => document.getElementById('modal-edit-schedule').classList.add('hidden'));
+        document.getElementById('btn-add-any-schedule').addEventListener('click', handleAddAnyScheduleClick);
+        
         document.getElementById('form-schedule-save').addEventListener('submit', handleScheduleSubmit);
         document.getElementById('btn-delete-schedule').addEventListener('click', handleScheduleDelete);
 
+        // 分類名そのものの編集・削除
+        document.getElementById('btn-cancel-cat-edit').addEventListener('click', () => document.getElementById('modal-edit-category').classList.add('hidden'));
+        document.getElementById('form-edit-cat-name').addEventListener('submit', handleCategoryNameUpdate);
+        document.getElementById('btn-delete-cat').addEventListener('click', handleCategoryDelete);
+
         document.getElementById('btn-cloud-load').addEventListener('click', loadFromSpreadsheet);
+
+        window.addEventListener('resize', renderAllViews);
     });
 
-    // --- スプシ同期群 ---
+    // --- 同期処理 ---
     async function loadFromSpreadsheet() {
-        document.getElementById('sync-status').innerText = "🔄 スプシからカレンダー同期中...";
+        document.getElementById('sync-status').innerText = "🔄 スプレッドシートから最新データを同期中...";
         try {
             const res = await fetch(GAS_API_URL);
             if(res.ok) {
@@ -331,21 +441,21 @@
                 schedules = data.schedules || {};
                 localStorage.setItem('ss_categories2', JSON.stringify(categories));
                 localStorage.setItem('ss_schedules2', JSON.stringify(schedules));
-                renderCalendar();
-                document.getElementById('sync-status').innerText = "✅ Googleカレンダー連携中（リアルタイム）";
+                renderAllViews();
+                document.getElementById('sync-status').innerText = "✅ スプレッドシート連携稼働中 (自動判別マルチビュー)";
             }
         } catch(e) {
-            document.getElementById('sync-status').innerText = "❌ 読み込み通信エラー";
+            document.getElementById('sync-status').innerText = "❌ 読み込み同期エラー";
         }
     }
 
     async function saveToSpreadsheet() {
-        document.getElementById('sync-status').innerText = "💾 スプシに自動保存中...";
+        document.getElementById('sync-status').innerText = "💾 スプレッドシートに保存中...";
         try {
             await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify({ categories, schedules }) });
-            document.getElementById('sync-status').innerText = "✅ カレンダーデータを同期保存しました！";
+            document.getElementById('sync-status').innerText = "✅ 全端末へ変更データをクラウド保存しました！";
         } catch(e) {
-            document.getElementById('sync-status').innerText = "❌ 保存通信エラー";
+            document.getElementById('sync-status').innerText = "❌ クラウド保存エラー";
         }
     }
 
@@ -363,82 +473,141 @@
         if (mainSelect === 'イベント') {
             midSelectGroup.classList.remove('hidden');
             midTextGroup.classList.add('hidden');
-            if (document.getElementById('select-mid-cat').value === '__other_mid__') {
-                midTextGroup.classList.remove('hidden');
-                inputMid.placeholder = '自由に入力（スタジオなど）';
-            }
         } else if (mainSelect === '楽曲制作') {
-            inputMid.placeholder = '※楽曲名・企画名を記載';
+            inputMid.placeholder = '※企画名や曲名を記載';
         } else if (mainSelect === 'SNS') {
-            inputMid.placeholder = '※媒体や楽曲名を記載';
+            inputMid.placeholder = '※媒体や企画内容';
         } else if (mainSelect === '__other__') {
             customMainGroup.classList.remove('hidden');
             inputMid.placeholder = '中分類を入力';
         }
     }
 
-    // --- カレンダーの描画処理 ---
-    function renderCalendar() {
+    function renderAllViews() {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
-        document.getElementById('calendar-month-title').innerText = `${year}年${month + 1}月`;
+        document.getElementById('current-month-label').innerText = `${year}年${month + 1}月`;
 
+        if (categories.length === 0) {
+            document.getElementById('div-empty-notice').classList.remove('hidden');
+            document.getElementById('wbs-view-area').classList.add('hidden');
+            document.getElementById('calendar-view-area').classList.add('hidden');
+            return;
+        } else {
+            document.getElementById('div-empty-notice').classList.add('hidden');
+            document.getElementById('wbs-view-area').classList.remove('hidden');
+            document.getElementById('calendar-view-area').classList.remove('hidden');
+        }
+
+        renderWBSView(year, month);
+        renderCalendarView(year, month);
+    }
+
+    // ==========================================
+    // 📊 WBS（表）形式のレンダリング処理
+    // ==========================================
+    function renderWBSView(year, month) {
+        const numDays = new Date(year, month + 1, 0).getDate();
+        const headerRow = document.getElementById('table-header-days');
+        const tbody = document.getElementById('wbs-tbody');
+
+        headerRow.innerHTML = `<th class="col-main">大分類</th><th class="col-mid">中分類行</th>`;
+        for (let d = 1; d <= numDays; d++) {
+            const th = document.createElement('th'); th.innerText = d; headerRow.appendChild(th);
+        }
+        tbody.innerHTML = '';
+
+        categories.forEach(cat => {
+            const catRow = document.createElement('tr');
+            catRow.className = 'category-row';
+            if (cat.main === 'イベント') catRow.classList.add('category-event');
+            else if (cat.main === '楽曲制作') catRow.classList.add('category-music');
+            else if (cat.main === 'SNS') catRow.classList.add('category-sns');
+            else catRow.classList.add('category-default');
+            
+            const catTd = document.createElement('td');
+            catTd.setAttribute('colspan', numDays + 2);
+            catTd.innerText = `📢 ${cat.main} (タップで名前変更/行削除)`;
+            catTd.addEventListener('click', () => openCategoryEditModal('main', cat.main));
+            catRow.appendChild(catTd);
+            tbody.appendChild(catRow);
+
+            cat.mids.forEach(mid => {
+                const row = document.createElement('tr');
+                const tdMainPlaceholder = document.createElement('td');
+                tdMainPlaceholder.className = 'col-main'; tdMainPlaceholder.style.background = '#fff';
+                
+                const tdMid = document.createElement('td');
+                tdMid.className = 'col-mid'; tdMid.innerText = mid || '-';
+                tdMid.addEventListener('click', () => openCategoryEditModal('mid', cat.main, mid));
+                
+                row.appendChild(tdMainPlaceholder); row.appendChild(tdMid);
+
+                for (let d = 1; d <= numDays; d++) {
+                    const cell = document.createElement('td');
+                    cell.className = 'cell-day';
+                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    const scheduleKey = `${dateStr}_${cat.main}_${mid}`;
+                    
+                    if (schedules[scheduleKey]) {
+                        if (cat.main === 'イベント') cell.classList.add('has-event-live');
+                        else if (cat.main === '楽曲制作') cell.classList.add('has-event-music');
+                        else if (cat.main === 'SNS') cell.classList.add('has-event-sns');
+                        else cell.classList.add('has-event-default');
+                        
+                        cell.innerText = schedules[scheduleKey].subCat || '有';
+                    }
+                    cell.addEventListener('click', () => openWBSDetailModal(dateStr, cat.main, mid));
+                    row.appendChild(cell);
+                }
+                tbody.appendChild(row);
+            });
+        });
+    }
+
+    // ==========================================
+    // 📅 カレンダー（ブロック）形式のレンダリング処理
+    // ==========================================
+    function renderCalendarView(year, month) {
         const gridBody = document.getElementById('calendar-grid-body');
         gridBody.innerHTML = '';
 
-        // 曜日の見出し
         const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
         weekdays.forEach(w => {
             const div = document.createElement('div');
-            div.className = 'weekday-label';
-            div.innerText = w;
-            gridBody.appendChild(div);
+            div.className = 'weekday-label'; div.innerText = w; gridBody.appendChild(div);
         });
 
-        // カレンダーの日付マスの算出
         const firstDayIndex = new Date(year, month, 1).getDay();
         const totalDays = new Date(year, month + 1, 0).getDate();
         const prevTotalDays = new Date(year, month, 0).getDate();
 
-        // 前月のハミ出し部分
         for (let i = firstDayIndex; i > 0; i--) {
-            const dayNum = prevTotalDays - i + 1;
-            const pMonth = month === 0 ? 11 : month - 1;
-            const pYear = month === 0 ? year - 1 : year;
-            createDayCell(pYear, pMonth, dayNum, true, gridBody);
+            createCalendarCell(month === 0 ? year-1 : year, month === 0 ? 11 : month-1, prevTotalDays - i + 1, true, gridBody);
         }
-
-        // 当月の日付
         for (let i = 1; i <= totalDays; i++) {
-            createDayCell(year, month, i, false, gridBody);
+            createCalendarCell(year, month, i, false, gridBody);
         }
-
-        // 翌月のハミ出し部分（グリッドを6週間分＝42個にする調整）
         const totalCells = firstDayIndex + totalDays;
         const nextMonthCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
         for (let i = 1; i <= nextMonthCells; i++) {
-            const nMonth = month === 11 ? 0 : month + 1;
-            const nYear = month === 11 ? year + 1 : year;
-            createDayCell(nYear, nMonth, i, true, gridBody);
+            createCalendarCell(month === 11 ? year+1 : year, month === 11 ? 0 : month+1, i, true, gridBody);
         }
     }
 
-    function createDayCell(year, month, day, isOtherMonth, targetGrid) {
+    function createCalendarCell(year, month, day, isOtherMonth, targetGrid) {
         const cell = document.createElement('div');
         cell.className = 'calendar-day';
         if (isOtherMonth) cell.classList.add('other-month');
 
         const dayNumSpan = document.createElement('div');
-        dayNumSpan.className = 'day-number';
-        dayNumSpan.innerText = day;
+        dayNumSpan.className = 'day-number'; dayNumSpan.innerText = day;
         cell.appendChild(dayNumSpan);
 
         const badgesContainer = document.createElement('div');
         badgesContainer.className = 'event-badges-container';
 
-        // 登録されている分類行をループして、この日の予定があるかチェック
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        
         categories.forEach(cat => {
             cat.mids.forEach(mid => {
                 const scheduleKey = `${dateStr}_${cat.main}_${mid}`;
@@ -450,129 +619,190 @@
                     else if (cat.main === 'SNS') badge.classList.add('badge-sns');
                     else badge.classList.add('badge-default');
                     
-                    // 「中分類:小分類」の形で小さく表示
                     badge.innerText = `${mid}:${schedules[scheduleKey].subCat || '予定'}`;
                     badgesContainer.appendChild(badge);
                 }
             });
         });
-
         cell.appendChild(badgesContainer);
-        cell.addEventListener('click', () => openDayDetailModal(dateStr));
+        cell.addEventListener('click', () => openCalendarDayModal(dateStr));
         targetGrid.appendChild(cell);
     }
 
-    // --- 新規の分類行（ベース）を追加 ---
+    // --- 新規分類の登録 ---
     function handleCategorySubmit(e) {
         e.preventDefault();
         const selectValue = document.getElementById('select-main-cat').value;
         let mainCatInput = selectValue === '__other__' ? document.getElementById('input-custom-main').value.trim() : selectValue;
+        let midCatInput = selectValue === 'イベント' && document.getElementById('select-mid-cat').value !== '__other_mid__' ? document.getElementById('select-mid-cat').value : document.getElementById('input-mid-cat').value.trim();
         
-        let midCatInput = '';
-        if (selectValue === 'イベント') {
-            const midSelectVal = document.getElementById('select-mid-cat').value;
-            midCatInput = midSelectVal === '__other_mid__' ? document.getElementById('input-mid-cat').value.trim() : midSelectVal;
-        } else {
-            midCatInput = document.getElementById('input-mid-cat').value.trim();
-        }
         if(!mainCatInput || !midCatInput) return;
 
         let targetMain = categories.find(c => c.main === mainCatInput);
         if (!targetMain) { targetMain = { main: mainCatInput, mids: [] }; categories.push(targetMain); }
-        if (!targetMain.mids.includes(midCatInput)) { targetMain.mids.push(midCatInput); }
+        if (!targetMain.mids.includes(midCatInput)) targetMain.mids.push(midCatInput);
 
         localStorage.setItem('ss_categories2', JSON.stringify(categories));
-        renderCalendar();
+        renderAllViews();
         saveToSpreadsheet();
         document.getElementById('form-category').reset();
         document.getElementById('modal-menu').classList.add('hidden');
     }
 
-    // --- 日付タップ：その日の予定一覧＆追加導線 ---
-    function openDayDetailModal(dateStr) {
-        selectedDateStr = dateStr;
+    // --- WBS：セルクリック時の詳細ポップアップ ---
+    function openWBSDetailModal(dateStr, mainCat, midCat) {
+        activeCellInfo = { dateStr, mainCat, midCat };
+        const scheduleKey = `${dateStr}_${mainCat}_${midCat}`;
+        const data = schedules[scheduleKey] || { subCat: '', location: '', song: '', content: '' };
+
+        document.getElementById('view-date').innerText = dateStr.replace(/-/g, '/');
+        document.getElementById('view-category').innerText = `${mainCat} ＞ ${midCat}`;
+        document.getElementById('view-sub-cat').innerText = data.subCat || '未設定';
+        document.getElementById('view-location').innerText = data.location || '記載なし';
+        document.getElementById('view-song').innerText = data.song || '記載なし';
+        document.getElementById('view-content').innerText = data.content || '記載なし';
+        document.getElementById('modal-detail').classList.remove('hidden');
+    }
+
+    function transitDetailToEdit() {
+        document.getElementById('modal-detail').classList.add('hidden');
+        openDirectEditForm(activeCellInfo.dateStr, activeCellInfo.mainCat, activeCellInfo.midCat);
+    }
+
+    // ========================================================
+    // ⭐【今回改修】カレンダー：日付タップ時のスリムポップアップ
+    // ========================================================
+    function openCalendarDayModal(dateStr) {
+        activeCellInfo.dateStr = dateStr;
         document.getElementById('modal-day-label').innerText = `${dateStr.replace(/-/g, '/')} の予定`;
         const listContainer = document.getElementById('day-schedules-list');
         listContainer.innerHTML = '';
 
-        if(categories.length === 0) {
-            listContainer.innerHTML = '<p style="font-size:0.85rem; color:gray;">まずは右上の「行を追加」からベースの分類を登録してください。</p>';
-            document.getElementById('modal-day-detail').classList.remove('hidden');
-            return;
-        }
+        let hasAnySchedule = false;
 
-        // 分類行の一覧をベースに、予定があれば詳細、なければ「＋新規入力」ボタンを表示
+        // 登録されている予定だけを抽出してループ
         categories.forEach(cat => {
             cat.mids.forEach(mid => {
                 const scheduleKey = `${dateStr}_${cat.main}_${mid}`;
                 const data = schedules[scheduleKey];
+                
+                // データの入力があるもの（予定が入っているもの）だけを表示
+                if (data && (data.subCat || data.location || data.song || data.content)) {
+                    hasAnySchedule = true;
+                    const div = document.createElement('div');
+                    div.className = 'day-schedule-item';
 
-                const div = document.createElement('div');
-                div.className = 'day-schedule-item';
+                    let tagClass = 'badge-default';
+                    if (cat.main === 'イベント') tagClass = 'badge-event';
+                    else if (cat.main === '楽曲制作') tagClass = 'badge-music';
+                    else if (cat.main === 'SNS') tagClass = 'badge-sns';
 
-                // タグの色設定
-                let tagColorClass = 'badge-default';
-                if (cat.main === 'イベント') tagColorClass = 'badge-event';
-                else if (cat.main === '楽曲制作') tagColorClass = 'badge-music';
-                else if (cat.main === 'SNS') tagColorClass = 'badge-sns';
-
-                if (data) {
-                    // 予定がある場合
                     div.innerHTML = `
-                        <span class="item-category-tag ${tagColorClass}">${cat.main} ＞ ${mid}</span>
+                        <span class="item-category-tag ${tagClass}">${cat.main} ＞ ${mid}</span>
                         <div class="item-title">📍 ${data.subCat || '未設定'}</div>
-                        <div class="item-details">📍場所: ${data.location || 'なし'} / 🎵楽曲: ${data.song || 'なし'}</div>
-                        <div class="item-details" style="margin-top:4px; background:#fff; padding:4px; border-radius:4px;">${data.content || '詳細なし'}</div>
-                        <button type="button" style="margin-top:8px; width:100%;" onclick="openEditScheduleForm('${cat.main}', '${mid}')">✏️ 予定を編集/削除</button>
-                    `;
-                } else {
-                    // 予定がない場合（新規登録ボタン）
-                    div.innerHTML = `
-                        <span class="item-category-tag ${tagColorClass}" style="opacity:0.6;">${cat.main} ＞ ${mid}</span>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
-                            <span style="font-size:0.8rem; color:gray;">予定未設定</span>
-                            <button type="button" class="btn-main" style="padding:4px 10px; font-size:0.75rem;" onclick="openEditScheduleForm('${cat.main}', '${mid}')">＋ 予定を入れる</button>
+                        <div style="font-size:0.75rem; color:#555;">
+                            ${data.location ? `🏠 場所: ${data.location}` : ''} 
+                            ${data.song ? ` 🎵 楽曲: ${data.song}` : ''}
+                        </div>
+                        ${data.content ? `<div style="font-size:0.75rem; margin-top:6px; color:#333; background:#fff; padding:6px; border-radius:4px; border:1px solid #e0e0e0;">${data.content}</div>` : ''}
+                        <div style="text-align: right; margin-top: 8px;">
+                            <button type="button" style="padding:4px 10px; font-size:0.75rem;" onclick="closeModalAndEdit('${dateStr}','${cat.main}','${mid}')">✏️ 編集/削除</button>
                         </div>
                     `;
+                    listContainer.appendChild(div);
                 }
-                listContainer.appendChild(div);
             });
         });
 
+        // もし1つも予定が登録されていなければ通知を表示
+        if (!hasAnySchedule) {
+            listContainer.innerHTML = `
+                <div style="text-align:center; padding:20px; color:#7f8c8d; font-size:0.9rem;">
+                    📭 この日の予定はまだありません。
+                </div>
+            `;
+        }
+        
         document.getElementById('modal-day-detail').classList.remove('hidden');
     }
 
-    // --- 予定の個別編集フォームを開く ---
-    window.openEditScheduleForm = function(mainCat, midCat) {
+    // カレンダー詳細画面内の個別予定の「編集」ボタンが押された時
+    window.closeModalAndEdit = function(dateStr, main, mid) {
         document.getElementById('modal-day-detail').classList.add('hidden');
-        selectedCatInfo = { main: mainCat, mid: midCat };
+        openDirectEditForm(dateStr, main, mid);
+    };
 
-        const scheduleKey = `${selectedDateStr}_${mainCat}_${midCat}`;
+    // カレンダー詳細画面の「＋ 予定を追加する」ボタンが押された時
+    function handleAddAnyScheduleClick() {
+        const dateStr = activeCellInfo.dateStr;
+        document.getElementById('modal-day-detail').classList.add('hidden');
+
+        // セレクトボックスの選択肢を現在のWBS分類行から生成
+        const catSelect = document.getElementById('select-target-cat-path');
+        catSelect.innerHTML = '';
+        categories.forEach(cat => {
+            cat.mids.forEach(mid => {
+                const opt = document.createElement('option');
+                opt.value = `${cat.main}___${mid}`;
+                opt.innerText = `${cat.main} ＞ ${mid}`;
+                catSelect.appendChild(opt);
+            });
+        });
+
+        document.getElementById('edit-date-label').innerText = dateStr.replace(/-/g, '/');
+        
+        // 追加モード時はセレクトボックスを表示、固定ラベルを隠す
+        document.getElementById('group-edit-cat-select').classList.remove('hidden');
+        document.getElementById('group-edit-cat-label').classList.add('hidden');
+
+        // 入力フォームの初期化
+        document.getElementById('input-sub-cat-edit').value = '';
+        document.getElementById('input-location').value = '';
+        document.getElementById('input-song').value = '';
+        document.getElementById('input-content').value = '';
+        
+        // 新規登録時は削除ボタンを非表示にする
+        document.getElementById('btn-delete-schedule').classList.add('hidden');
+        document.getElementById('modal-edit-schedule').classList.remove('hidden');
+    }
+
+    // --- 共通：スケジュール編集フォームの展開（WBSマスや個別編集用） ---
+    function openDirectEditForm(dateStr, mainCat, midCat) {
+        activeCellInfo = { dateStr, mainCat, midCat };
+        const scheduleKey = `${dateStr}_${mainCat}_${midCat}`;
         const data = schedules[scheduleKey] || { subCat: '', location: '', song: '', content: '' };
 
+        document.getElementById('edit-date-label').innerText = dateStr.replace(/-/g, '/');
         document.getElementById('edit-cat-path-label').innerText = `${mainCat} ＞ ${midCat}`;
         
-        // 各種プレースホルダーの初期化
-        const inputSub = document.getElementById('input-sub-cat-edit');
-        if (mainCat === 'イベント') inputSub.placeholder = '※内容（ライブ、スタジオなど）';
-        else if (mainCat === '楽曲制作') inputSub.placeholder = '※voアレンジ/プリプロ/REC〆など';
-        else if (mainCat === 'SNS') inputSub.placeholder = '※動画公開予定日、TikTok撮影など';
-        else inputSub.placeholder = '小分類を入力';
+        // 編集モード時は固定ラベルを表示、セレクトボックスを隠す
+        document.getElementById('group-edit-cat-select').classList.add('hidden');
+        document.getElementById('group-edit-cat-label').classList.remove('hidden');
 
         document.getElementById('input-sub-cat-edit').value = data.subCat || '';
         document.getElementById('input-location').value = data.location || '';
         document.getElementById('input-song').value = data.song || '';
         document.getElementById('input-content').value = data.content || '';
 
+        document.getElementById('btn-delete-schedule').classList.remove('hidden');
         document.getElementById('modal-edit-schedule').classList.remove('hidden');
-    };
+    }
 
-    // --- 予定の保存 ---
+    // --- 共通：予定データの保存・消去 ---
     function handleScheduleSubmit(e) {
         e.preventDefault();
-        const { main, mid } = selectedCatInfo;
-        const scheduleKey = `${selectedDateStr}_${main}_${mid}`;
+        let { dateStr, mainCat, midCat } = activeCellInfo;
+        
+        // セレクトボックスが表示されている（新規追加モード）の場合はそこから大・中分類を取得
+        if (!document.getElementById('group-edit-cat-select').classList.contains('hidden')) {
+            const selectVal = document.getElementById('select-target-cat-path').value;
+            if(!selectVal) return;
+            const parts = selectVal.split('___');
+            mainCat = parts[0];
+            midCat = parts[1];
+        }
 
+        const scheduleKey = `${dateStr}_${mainCat}_${midCat}`;
         const subCat = document.getElementById('input-sub-cat-edit').value.trim();
         const location = document.getElementById('input-location').value.trim();
         const song = document.getElementById('input-song').value.trim();
@@ -585,22 +815,78 @@
         }
 
         localStorage.setItem('ss_schedules2', JSON.stringify(schedules));
-        renderCalendar();
+        renderAllViews();
         saveToSpreadsheet();
         document.getElementById('modal-edit-schedule').classList.add('hidden');
     }
 
-    // --- 予定の削除ボタン ---
     function handleScheduleDelete() {
-        if(!confirm("この日の予定データを削除しますか？")) return;
-        const { main, mid } = selectedCatInfo;
-        const scheduleKey = `${selectedDateStr}_${main}_${mid}`;
-
+        if(!confirm("このマスの予定を削除しますか？")) return;
+        const scheduleKey = `${activeCellInfo.dateStr}_${activeCellInfo.mainCat}_${activeCellInfo.midCat}`;
         delete schedules[scheduleKey];
         localStorage.setItem('ss_schedules2', JSON.stringify(schedules));
-        renderCalendar();
+        renderAllViews();
         saveToSpreadsheet();
         document.getElementById('modal-edit-schedule').classList.add('hidden');
+    }
+
+    // --- WBS：分類名変更・行削除処理 ---
+    function openCategoryEditModal(type, main, mid = '') {
+        activeCatEditInfo = { type, main, mid };
+        const label = document.getElementById('label-edit-cat-type');
+        const input = document.getElementById('input-edit-cat-name');
+        if(type === 'main') { label.innerText = "大分類名の変更"; input.value = main; }
+        else { label.innerText = `中分類名の変更 (${main})`; input.value = mid; }
+        document.getElementById('modal-edit-category').classList.remove('hidden');
+    }
+
+    function handleCategoryNameUpdate(e) {
+        e.preventDefault();
+        const newName = document.getElementById('input-edit-cat-name').value.trim();
+        if(!newName) return;
+        const { type, main, mid } = activeCatEditInfo;
+        const oldSchedules = { ...schedules }; schedules = {};
+
+        Object.keys(oldSchedules).forEach(key => {
+            const parts = key.split('_');
+            if(parts.length >= 3) {
+                let m = parts[1], d = parts[2];
+                if(type === 'main' && m === main) m = newName;
+                if(type === 'mid' && m === main && d === mid) d = newName;
+                schedules[`${parts[0]}_${m}_${d}`] = oldSchedules[key];
+            } else { schedules[key] = oldSchedules[key]; }
+        });
+
+        if(type === 'main') {
+            const cat = categories.find(c => c.main === main); if(cat) cat.main = newName;
+        } else {
+            const cat = categories.find(c => c.main === main); if(cat) { const idx = cat.mids.indexOf(mid); if(idx !== -1) cat.mids[idx] = newName; }
+        }
+        localStorage.setItem('ss_categories2', JSON.stringify(categories));
+        localStorage.setItem('ss_schedules2', JSON.stringify(schedules));
+        renderAllViews(); saveToSpreadsheet();
+        document.getElementById('modal-edit-category').classList.add('hidden');
+    }
+
+    function handleCategoryDelete() {
+        const { type, main, mid } = activeCatEditInfo;
+        if(!confirm("この行を丸ごと削除しますか？登録されていた予定データも同時にすべて消去されます。")) return;
+
+        Object.keys(schedules).forEach(key => {
+            const parts = key.split('_');
+            if(parts.length >= 3) {
+                if(type === 'main' && parts[1] === main) delete schedules[key];
+                if(type === 'mid' && parts[1] === main && parts[2] === mid) delete schedules[key];
+            }
+        });
+
+        if(type === 'main') categories = categories.filter(c => c.main !== main);
+        else { const cat = categories.find(c => c.main === main); if(cat) cat.mids = cat.mids.filter(m => m !== mid); }
+
+        localStorage.setItem('ss_categories2', JSON.stringify(categories));
+        localStorage.setItem('ss_schedules2', JSON.stringify(schedules));
+        renderAllViews(); saveToSpreadsheet();
+        document.getElementById('modal-edit-category').classList.add('hidden');
     }
 </script>
 </body>
