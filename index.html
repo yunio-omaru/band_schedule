@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
     <title>迎撃乙女バンド運営用スケジュール</title>
-    
     <style>
         :root {
             --primary-color: #333333;
@@ -13,21 +11,16 @@
             --card-bg: #ffffff;
             --text-color: #2c3e50;
             --border-color: #dcdde1; 
-            
-            /* 各大分類のテーマカラー */
-            --bg-event-main: #ff7f50; /* イベント：コーラルオレンジ */
+            --bg-event-main: #ff7f50; 
             --bg-event-cell: #fff5f0;
             --text-event-cell: #e65c00;
-
-            --bg-music-main: #2ec4b6; /* 楽曲制作：ミントグリーン */
+            --bg-music-main: #2ec4b6; 
             --bg-music-cell: #f0fdfa;
             --text-music-cell: #0f766e;
-
-            --bg-sns-main: #9b59b6; /* SNS：パープル */
+            --bg-sns-main: #9b59b6; 
             --bg-sns-cell: #fbf0f0;
             --text-sns-cell: #8e44ad;
-
-            --bg-default-main: #718093; /* その他：グレー */
+            --bg-default-main: #718093; 
             --bg-default-cell: #f8f9fa;
             --text-default-cell: #2f3640;
         }
@@ -38,10 +31,7 @@
             margin: 0;
             padding: 20px;
         }
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-        }
+        .container { max-width: 100%; margin: 0 auto; }
         header {
             display: flex;
             justify-content: space-between;
@@ -64,14 +54,26 @@
             transition: all 0.2s ease;
             box-shadow: 0 2px 4px rgba(0,0,0,0.08);
         }
-        button:active {
-            transform: translateY(1px);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
-        }
+        button:active { transform: translateY(1px); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
         .btn-main { background-color: #2f3640; color: white; border: 1px solid #2f3640; }
         .btn-main:hover { background-color: #1e272e; border-color: #1e272e; }
         .btn-sub { background-color: #ffffff; color: #2f3640; border: 1px solid #dcdde1; }
         .btn-sub:hover { background-color: #f5f6fa; border-color: #c2c3c9; }
+        .btn-sync { background-color: #27ae60; color: white; margin-right: 10px; }
+        .btn-sync:hover { background-color: #219a52; }
+
+        /* 設定パネル */
+        .config-panel {
+            background: #dfe4ea;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+        }
+        .config-panel input {
+            padding: 6px; margin-right: 10px; border: 1px solid #ccc; border-radius: 4px; width: 160px;
+        }
+        .config-panel input[type="password"] { width: 220px; }
 
         .wbs-container {
             background: var(--card-bg);
@@ -100,22 +102,13 @@
             text-align: center;
             height: 38px;
         }
-        table.wbs-table th { 
-            background: #f1f2f6; 
-            font-weight: bold; 
-            color: #57606f;
-        }
+        table.wbs-table th { background: #f1f2f6; font-weight: bold; color: #57606f;}
         table.wbs-table .col-main { width: 90px; text-align: left; font-weight: bold; }
         table.wbs-table .col-mid { width: 90px; text-align: left; font-weight: bold; color: #57606f; background: #fafafa; }
         table.wbs-table .col-sub { width: 110px; text-align: left; color: #2f3640; background: #fff; }
         
         table.wbs-table tr.category-row td {
-            font-weight: bold;
-            text-align: left;
-            font-size: 0.95rem;
-            padding: 10px 15px;
-            color: white;
-            letter-spacing: 0.05em;
+            font-weight: bold; text-align: left; font-size: 0.95rem; padding: 10px 15px; color: white; letter-spacing: 0.05em;
         }
         table.wbs-table tr.category-event td { background-color: var(--bg-event-main); }
         table.wbs-table tr.category-music td { background-color: var(--bg-music-main); }
@@ -123,24 +116,12 @@
         table.wbs-table tr.category-default td { background-color: var(--bg-default-main); }
 
         table.wbs-table td.cell-day {
-            cursor: pointer;
-            transition: all 0.15s ease-in-out;
-            font-size: 0.75rem;
-            white-space: pre-wrap;
-            word-break: break-all;
-            letter-spacing: 0.1em;
-            max-width: 45px;
-            background: #ffffff;
-            position: relative;
-            line-height: 1.3;
+            cursor: pointer; transition: all 0.15s ease-in-out; font-size: 0.75rem;
+            white-space: pre-wrap; word-break: break-all; max-width: 45px; background: #ffffff; position: relative;
         }
         table.wbs-table td.cell-day:hover { 
-            background: #fffdf0 !important; 
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.25); 
-            transform: scale(1.12); 
-            z-index: 10; 
-            border: 1px solid #ffa500; 
-            border-radius: 4px;
+            background: #fffdf0 !important; box-shadow: 0 0 10px rgba(0, 0, 0, 0.25); 
+            transform: scale(1.12); z-index: 10; border: 1px solid #ffa500; border-radius: 4px;
         }
         
         table.wbs-table td.cell-day.has-event-live { background: var(--bg-event-cell) !important; color: var(--text-event-cell); font-weight: bold; }
@@ -148,50 +129,40 @@
         table.wbs-table td.cell-day.has-event-sns { background: var(--bg-sns-cell) !important; color: var(--text-sns-cell); font-weight: bold; }
         table.wbs-table td.cell-day.has-event-default { background: var(--bg-default-cell) !important; color: var(--text-default-cell); font-weight: bold; }
 
-        .empty-notice {
-            padding: 40px;
-            text-align: center;
-            color: #7f8c8d;
-            font-size: 0.95rem;
-            font-weight: bold;
-        }
-
+        .empty-notice { padding: 40px; text-align: center; color: #7f8c8d; font-size: 0.95rem; font-weight: bold; }
         .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4);
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
         }
-        .modal-card {
-            background: white;
-            padding: 24px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        }
+        .modal-card { background: white; padding: 24px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
         .modal-card h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 2px solid #2f3640; padding-bottom: 8px; color: #2f3640; }
         .form-group { margin-bottom: 14px; }
         .form-group label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 6px; color: #57606f; }
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ced6e0; border-radius: 6px; font-size: 0.9rem;
-        }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #2f3640; outline: none; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ced6e0; border-radius: 6px; font-size: 0.9rem; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-        
         .info-value { background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #e4e7eb; min-height: 1.2rem; white-space: pre-wrap; font-size: 0.95rem;}
         .hidden { display: none !important; }
+        .status-bar { font-weight: bold; color: #27ae60; margin-left: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <div class="config-panel">
+        🔑 <strong>GitHub同期設定：</strong>
+        <input type="text" id="cfg-user" placeholder="GitHubユーザー名">
+        <input type="text" id="cfg-repo" placeholder="リポジトリ名">
+        <input type="password" id="cfg-token" placeholder="アクセストークン(ghp_...)">
+        <button id="btn-save-config" class="btn-main" style="padding: 5px 10px; font-size:0.8rem;">設定保存</button>
+        <span id="sync-status" class="status-bar"></span>
+    </div>
+
     <header>
         <h1>🎸 迎撃乙女バンド運営スケジュール</h1>
-        <button id="btn-open-menu" class="btn-main">編集メニュー</button>
+        <div>
+            <button id="btn-cloud-load" class="btn-sync">🔄 クラウドから読込</button>
+            <button id="btn-open-menu" class="btn-main">編集メニュー</button>
+        </div>
     </header>
 
     <div class="wbs-container">
@@ -201,9 +172,7 @@
             <button id="btn-next-month" class="btn-sub">次月 ▶</button>
         </div>
         <table class="wbs-table">
-            <thead>
-                <tr id="table-header-days"></tr>
-            </thead>
+            <thead><tr id="table-header-days"></tr></thead>
             <tbody id="wbs-tbody"></tbody>
         </table>
         <div id="div-empty-notice" class="empty-notice hidden">
@@ -212,12 +181,10 @@
     </div>
 </div>
 
-<!-- ==================== モーダル1：メインメニュー編集画面（分類設定） ==================== -->
 <div id="modal-menu" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>メインメニュー編集（分類登録）</h2>
         <form id="form-category">
-            <!-- 大分類 -->
             <div class="form-group">
                 <label>大分類名 <span style="color:red;">*必須</span></label>
                 <select id="select-main-cat">
@@ -231,8 +198,6 @@
                 <label>手動入力の大分類名</label>
                 <input type="text" id="input-custom-main" placeholder="例：グッズ、ミーティング">
             </div>
-
-            <!-- 中分類（プルダウン用・テキスト用の2つを用意してJSで切り替え） -->
             <div class="form-group" id="group-mid-select">
                 <label>中分類名（任意）</label>
                 <select id="select-mid-cat">
@@ -246,13 +211,10 @@
                 <label id="label-mid-text">中分類名（任意）</label>
                 <input type="text" id="input-mid-cat" placeholder="">
             </div>
-
-            <!-- 小分類 -->
             <div class="form-group">
                 <label>小分類名（任意）</label>
                 <input type="text" id="input-sub-cat" placeholder="">
             </div>
-
             <div class="modal-actions">
                 <button type="button" id="btn-close-menu" class="btn-sub">閉じる</button>
                 <button type="submit" class="btn-main">分類設定後登録</button>
@@ -261,29 +223,23 @@
     </div>
 </div>
 
-<!-- ==================== モーダル2：詳細画面 ==================== -->
 <div id="modal-detail" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>詳細画面</h2>
         <div class="form-group">
-            <label>日付</label>
-            <div id="view-date" class="info-value"></div>
+            <label>日付</label><div id="view-date" class="info-value"></div>
         </div>
         <div class="form-group">
-            <label>分類</label>
-            <div id="view-category" class="info-value"></div>
+            <label>分類</label><div id="view-category" class="info-value"></div>
         </div>
         <div class="form-group">
-            <label>場所</label>
-            <div id="view-location" class="info-value"></div>
+            <label>場所</label><div id="view-location" class="info-value"></div>
         </div>
         <div class="form-group">
-            <label>楽曲</label>
-            <div id="view-song" class="info-value"></div>
+            <label>楽曲</label><div id="view-song" class="info-value"></div>
         </div>
         <div class="form-group">
-            <label>内容</label>
-            <div id="view-content" class="info-value"></div>
+            <label>内容</label><div id="view-content" class="info-value"></div>
         </div>
         <div class="modal-actions">
             <button type="button" id="btn-close-detail" class="btn-sub">閉じる</button>
@@ -292,31 +248,15 @@
     </div>
 </div>
 
-<!-- ==================== モーダル3：編集画面 ==================== -->
 <div id="modal-edit" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>編集画面</h2>
         <form id="form-schedule">
-            <div class="form-group">
-                <label>日付</label>
-                <div id="edit-date-label" style="font-weight: bold; margin-bottom: 5px;"></div>
-            </div>
-            <div class="form-group">
-                <label>分類</label>
-                <div id="edit-category-label" style="font-weight: bold; color: #555; margin-bottom: 5px;"></div>
-            </div>
-            <div class="form-group">
-                <label>場所</label>
-                <input type="text" id="input-location" placeholder="手動で記載">
-            </div>
-            <div class="form-group">
-                <label>楽曲</label>
-                <input type="text" id="input-song" placeholder="手動で記載">
-            </div>
-            <div class="form-group">
-                <label>内容</label>
-                <textarea id="input-content" rows="3" placeholder="手動で記載"></textarea>
-            </div>
+            <div class="form-group"><label>日付</label><div id="edit-date-label" style="font-weight: bold;"></div></div>
+            <div class="form-group"><label>分類</label><div id="edit-category-label" style="font-weight: bold; color: #555;"></div></div>
+            <div class="form-group"><label>場所</label><input type="text" id="input-location"></div>
+            <div class="form-group"><label>楽曲</label><input type="text" id="input-song"></div>
+            <div class="form-group"><label>内容</label><textarea id="input-content" rows="3"></textarea></div>
             <div class="modal-actions">
                 <button type="button" id="btn-cancel-edit" class="btn-sub">キャンセル</button>
                 <button type="submit" class="btn-main">保存する</button>
@@ -326,44 +266,35 @@
 </div>
 
 <script>
-    // --- 状態管理 ---
-    let currentDate = new Date(2026, 5, 1); // 2026年6月
-    
-    // 記憶領域をリフレッシュ
-    let categories = JSON.parse(localStorage.getItem('bandCategoriesV6')) || [];
-    let schedules = JSON.parse(localStorage.getItem('bandSchedulesV6')) || {};
-
+    let currentDate = new Date(2026, 5, 1);
+    let categories = [];
+    let schedules = {};
+    let fileSha = ""; // GitHub上のファイルのバージョン管理用ID
     let activeCellInfo = { dateStr: '', mainCat: '', midCat: '', subCat: '' };
 
-    // --- 初期化 ---
     document.addEventListener('DOMContentLoaded', () => {
+        loadConfig();
+        // 最初はローカルストレージから読み込み
+        categories = JSON.parse(localStorage.getItem('gh_categories')) || [];
+        schedules = JSON.parse(localStorage.getItem('gh_schedules')) || {};
         renderWBS();
-        updateFormInputs(); // 初期状態の入力欄案内を同期
+        updateFormInputs();
+
+        // 自動でクラウドから最新データを引っ張る
+        if(getConfig().token) loadFromGitHub();
 
         document.getElementById('btn-prev-month').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderWBS(); });
         document.getElementById('btn-next-month').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderWBS(); });
-
-        document.getElementById('btn-open-menu').addEventListener('click', () => {
-            document.getElementById('modal-menu').classList.remove('hidden');
-            updateFormInputs();
-        });
+        document.getElementById('btn-open-menu').addEventListener('click', () => { document.getElementById('modal-menu').classList.remove('hidden'); updateFormInputs(); });
         document.getElementById('btn-close-menu').addEventListener('click', () => document.getElementById('modal-menu').classList.add('hidden'));
         document.getElementById('form-category').addEventListener('submit', handleCategorySubmit);
-
-        // 大分類プルダウン変更時
         document.getElementById('select-main-cat').addEventListener('change', updateFormInputs);
-        // 中分類プルダウン変更時
+        
         document.getElementById('select-mid-cat').addEventListener('change', (e) => {
-            const midTextGroup = document.getElementById('group-mid-text');
-            const midTextInput = document.getElementById('input-mid-cat');
             if (e.target.value === '__other_mid__') {
-                midTextGroup.classList.remove('hidden');
-                document.getElementById('label-mid-text').innerText = '手動入力の中分類名';
-                midTextInput.placeholder = 'ライブ、スタジオ、MEET以外を自由に入力';
-            } else {
-                if (document.getElementById('select-main-cat').value === 'イベント') {
-                    midTextGroup.classList.add('hidden');
-                }
+                document.getElementById('group-mid-text').classList.remove('hidden');
+            } else if (document.getElementById('select-main-cat').value === 'イベント') {
+                document.getElementById('group-mid-text').classList.add('hidden');
             }
         });
 
@@ -371,21 +302,111 @@
         document.getElementById('btn-go-edit').addEventListener('click', transitDetailToEdit);
         document.getElementById('btn-cancel-edit').addEventListener('click', () => document.getElementById('modal-edit').classList.add('hidden'));
         document.getElementById('form-schedule').addEventListener('submit', handleScheduleSubmit);
+        
+        document.getElementById('btn-save-config').addEventListener('click', saveConfig);
+        document.getElementById('btn-cloud-load').addEventListener('click', loadFromGitHub);
     });
 
-    // --- 大分類の選択に合わせて入力フォーム・灰色案内（プレースホルダー）を動的に切り替えるシステム ---
+    // 設定の読み書き
+    function getConfig() {
+        return {
+            user: document.getElementById('cfg-user').value.trim(),
+            repo: document.getElementById('cfg-repo').value.trim(),
+            token: document.getElementById('cfg-token').value.trim()
+        };
+    }
+    function saveConfig() {
+        const cfg = getConfig();
+        localStorage.setItem('gh_cfg_user', cfg.user);
+        localStorage.setItem('gh_cfg_repo', cfg.repo);
+        localStorage.setItem('gh_cfg_token', cfg.token);
+        alert('同期設定を保存しました！クラウド読み込みを試します。');
+        loadFromGitHub();
+    }
+    function loadConfig() {
+        document.getElementById('cfg-user').value = localStorage.getItem('gh_cfg_user') || '';
+        document.getElementById('cfg-repo').value = localStorage.getItem('gh_cfg_repo') || '';
+        document.getElementById('cfg-token').value = localStorage.getItem('gh_cfg_token') || '';
+    }
+
+    // --- GitHubからデータをロード ---
+    async function loadFromGitHub() {
+        const cfg = getConfig();
+        if(!cfg.user || !cfg.repo || !cfg.token) {
+            document.getElementById('sync-status').innerText = "⚠️ 設定未完了のためローカル動作中";
+            return;
+        }
+        document.getElementById('sync-status').innerText = "🔄 読込中...";
+        const url = `https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents/data.json`;
+        
+        try {
+            const res = await fetch(url, {
+                headers: { "Authorization": `token ${cfg.token}`, "Accept": "application/vnd.github.v3+json" }
+            });
+            if(res.status === 200) {
+                const json = await res.json();
+                fileSha = json.sha;
+                const rData = JSON.parse(decodeURIComponent(escape(atob(json.content))));
+                categories = rData.categories || [];
+                schedules = rData.schedules || {};
+                
+                localStorage.setItem('gh_categories', JSON.stringify(categories));
+                localStorage.setItem('gh_schedules', JSON.stringify(schedules));
+                renderWBS();
+                document.getElementById('sync-status').innerText = "✅ クラウドと同期完了";
+            } else if(res.status === 404) {
+                document.getElementById('sync-status').innerText = "🆕 クラウドにデータなし（新規作成用）";
+            } else {
+                document.getElementById('sync-status').innerText = "❌ 接続エラー";
+            }
+        } catch(e) {
+            document.getElementById('sync-status').innerText = "❌ 通信に失敗しました";
+        }
+    }
+
+    // --- GitHubへデータをセーブ ---
+    async function saveToGitHub() {
+        const cfg = getConfig();
+        if(!cfg.user || !cfg.repo || !cfg.token) return;
+
+        document.getElementById('sync-status').innerText = "💾 クラウドに保存中...";
+        const url = `https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents/data.json`;
+        const dataPayload = { categories: categories, schedules: schedules };
+        const contentBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(dataPayload))));
+
+        const bodyData = {
+            message: "Update band schedule data",
+            content: contentBase64
+        };
+        if(fileSha) bodyData.sha = fileSha;
+
+        try {
+            const res = await fetch(url, {
+                method: "PUT",
+                headers: { "Authorization": `token ${cfg.token}`, "Content-Type": "application/json" },
+                body: JSON.stringify(bodyData)
+            });
+            if(res.ok) {
+                const json = await res.json();
+                fileSha = json.content.sha; // 最新のSHAに更新
+                document.getElementById('sync-status').innerText = "✅ クラウドに保存完了！";
+            } else {
+                document.getElementById('sync-status').innerText = "❌ 保存エラー。再読込してください";
+            }
+        } catch(e) {
+            document.getElementById('sync-status').innerText = "❌ 保存通信失敗";
+        }
+    }
+
     function updateFormInputs() {
         const mainSelect = document.getElementById('select-main-cat').value;
-        
         const customMainGroup = document.getElementById('group-custom-main');
         const midSelectGroup = document.getElementById('group-mid-select');
         const midTextGroup = document.getElementById('group-mid-text');
-        
         const labelMidText = document.getElementById('label-mid-text');
         const inputMid = document.getElementById('input-mid-cat');
         const inputSub = document.getElementById('input-sub-cat');
 
-        // デフォルト初期化
         customMainGroup.classList.add('hidden');
         document.getElementById('input-custom-main').removeAttribute('required');
         midSelectGroup.classList.add('hidden');
@@ -393,42 +414,32 @@
         labelMidText.innerText = '中分類名（任意）';
 
         if (mainSelect === 'イベント') {
-            // 中分類をプルダウン化
             midSelectGroup.classList.remove('hidden');
-            midTextGroup.classList.add('hidden'); // 通常テキスト欄は隠す
-            
-            // 「その他手動入力」が選ばれていればテキスト欄を出す
+            midTextGroup.classList.add('hidden');
             if (document.getElementById('select-mid-cat').value === '__other_mid__') {
                 midTextGroup.classList.remove('hidden');
                 labelMidText.innerText = '手動入力の中分類名';
                 inputMid.placeholder = '自由に入力してください';
             }
-            
-            // 小分類の灰色文字設定
             inputSub.placeholder = '※内容をここに記載ください。';
-
         } else if (mainSelect === '楽曲制作') {
             inputMid.placeholder = '※楽曲名を記載ください。';
             inputSub.placeholder = '※voパートアレンジ/プリプロ/REC〆など を記載ください。';
-
         } else if (mainSelect === 'SNS') {
             inputMid.placeholder = '※楽曲名を記載ください。';
             inputSub.placeholder = 'voREC予定/公開予定日 などを記載ください。';
-
         } else if (mainSelect === '__other__') {
             customMainGroup.classList.remove('hidden');
             document.getElementById('input-custom-main').setAttribute('required', 'required');
-            inputMid.placeholder = '中分類を入力（空欄も可）';
-            inputSub.placeholder = '小分類を入力（空欄も可）';
+            inputMid.placeholder = '中分類を入力';
+            inputSub.placeholder = '小分類を入力';
         }
     }
 
-    // --- WBSの描画 ---
     function renderWBS() {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
         document.getElementById('current-month-label').innerText = `${year}年${month + 1}月`;
-
         const numDays = new Date(year, month + 1, 0).getDate();
         const headerRow = document.getElementById('table-header-days');
         const tbody = document.getElementById('wbs-tbody');
@@ -436,16 +447,12 @@
 
         headerRow.innerHTML = `<th class="col-main">大分類</th><th class="col-mid">中分類</th><th class="col-sub">小分類</th>`;
         for (let d = 1; d <= numDays; d++) {
-            const th = document.createElement('th');
-            th.innerText = d;
-            headerRow.appendChild(th);
+            const th = document.createElement('th'); th.innerText = d; headerRow.appendChild(th);
         }
-
         tbody.innerHTML = '';
 
         if (categories.length === 0) {
-            emptyNotice.classList.remove('hidden');
-            return;
+            emptyNotice.classList.remove('hidden'); return;
         } else {
             emptyNotice.classList.add('hidden');
         }
@@ -453,59 +460,41 @@
         categories.forEach(cat => {
             const catRow = document.createElement('tr');
             catRow.className = 'category-row';
+            if (cat.main === 'イベント') catRow.classList.add('category-event');
+            else if (cat.main === '楽曲制作') catRow.classList.add('category-music');
+            else if (cat.main === 'SNS') catRow.classList.add('category-sns');
+            else catRow.classList.add('category-default');
             
-            if (cat.main === 'イベント') {
-                catRow.classList.add('category-event');
-            } else if (cat.main === '楽曲制作') {
-                catRow.classList.add('category-music');
-            } else if (cat.main === 'SNS') {
-                catRow.classList.add('category-sns');
-            } else {
-                catRow.classList.add('category-default');
-            }
             catRow.innerHTML = `<td colspan="${numDays + 3}">📢 ${cat.main}</td>`;
             tbody.appendChild(catRow);
 
             cat.mids.forEach(midObj => {
                 midObj.subs.forEach(sub => {
                     const row = document.createElement('tr');
-                    
                     const tdMainPlaceholder = document.createElement('td');
-                    tdMainPlaceholder.className = 'col-main';
-                    tdMainPlaceholder.style.background = '#fff';
+                    tdMainPlaceholder.className = 'col-main'; tdMainPlaceholder.style.background = '#fff';
                     
                     const tdMid = document.createElement('td');
-                    tdMid.className = 'col-mid';
-                    tdMid.innerText = midObj.mid || '-';
+                    tdMid.className = 'col-mid'; tdMid.innerText = midObj.mid || '-';
                     
                     const tdSub = document.createElement('td');
-                    tdSub.className = 'col-sub';
-                    tdSub.innerText = sub || '-';
+                    tdSub.className = 'col-sub'; tdSub.innerText = sub || '-';
                     
-                    row.appendChild(tdMainPlaceholder);
-                    row.appendChild(tdMid);
-                    row.appendChild(tdSub);
+                    row.appendChild(tdMainPlaceholder); row.appendChild(tdMid); row.appendChild(tdSub);
 
                     for (let d = 1; d <= numDays; d++) {
                         const cell = document.createElement('td');
                         cell.className = 'cell-day';
-                        
                         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                         const scheduleKey = `${dateStr}_${cat.main}_${midObj.mid}_${sub}`;
                         
                         if (schedules[scheduleKey]) {
-                            if (cat.main === 'イベント') {
-                                cell.classList.add('has-event-live');
-                            } else if (cat.main === '楽曲制作') {
-                                cell.classList.add('has-event-music');
-                            } else if (cat.main === 'SNS') {
-                                cell.classList.add('has-event-sns');
-                            } else {
-                                cell.classList.add('has-event-default');
-                            }
+                            if (cat.main === 'イベント') cell.classList.add('has-event-live');
+                            else if (cat.main === '楽曲制作') cell.classList.add('has-event-music');
+                            else if (cat.main === 'SNS') cell.classList.add('has-event-sns');
+                            else cell.classList.add('has-event-default');
                             cell.innerText = schedules[scheduleKey].location.split('\n')[0];
                         }
-
                         cell.addEventListener('click', () => openDetailModal(dateStr, cat.main, midObj.mid, sub));
                         row.appendChild(cell);
                     }
@@ -515,56 +504,32 @@
         });
     }
 
-    // --- 分類登録 ---
     function handleCategorySubmit(e) {
         e.preventDefault();
-        
-        // 大分類の取得
         const selectValue = document.getElementById('select-main-cat').value;
-        let mainCatInput = selectValue;
-        if (selectValue === '__other__') {
-            mainCatInput = document.getElementById('input-custom-main').value.trim();
-        }
+        let mainCatInput = selectValue === '__other__' ? document.getElementById('input-custom-main').value.trim() : selectValue;
         
-        // 中分類の取得（大分類がイベントならプルダウンから、それ以外ならテキストから）
         let midCatInput = '';
         if (selectValue === 'イベント') {
             const midSelectVal = document.getElementById('select-mid-cat').value;
-            if (midSelectVal === '__other_mid__') {
-                midCatInput = document.getElementById('input-mid-cat').value.trim();
-            } else {
-                midCatInput = midSelectVal;
-            }
+            midCatInput = midSelectVal === '__other_mid__' ? document.getElementById('input-mid-cat').value.trim() : midSelectVal;
         } else {
             midCatInput = document.getElementById('input-mid-cat').value.trim();
         }
-        
-        // 小分類の取得
         const subCatInput = document.getElementById('input-sub-cat').value.trim();
-
         if(!mainCatInput) return;
 
         let targetMain = categories.find(c => c.main === mainCatInput);
-        if (!targetMain) {
-            targetMain = { main: mainCatInput, mids: [] };
-            categories.push(targetMain);
-        }
-
+        if (!targetMain) { targetMain = { main: mainCatInput, mids: [] }; categories.push(targetMain); }
         let targetMid = targetMain.mids.find(m => m.mid === midCatInput);
-        if (!targetMid) {
-            targetMid = { mid: midCatInput, subs: [] };
-            targetMain.mids.push(targetMid);
-        }
+        if (!targetMid) { targetMid = { mid: midCatInput, subs: [] }; targetMain.mids.push(targetMid); }
+        if (!targetMid.subs.includes(subCatInput)) { targetMid.subs.push(subCatInput); }
 
-        if (!targetMid.subs.includes(subCatInput)) {
-            targetMid.subs.push(subCatInput);
-        }
-
-        localStorage.setItem('bandCategoriesV6', JSON.stringify(categories));
+        localStorage.setItem('gh_categories', JSON.stringify(categories));
         renderWBS();
+        saveToGitHub(); // クラウドへ保存
         
         document.getElementById('form-category').reset();
-        document.getElementById('group-custom-main').classList.add('hidden');
         document.getElementById('modal-menu').classList.add('hidden');
     }
 
@@ -574,37 +539,30 @@
         const data = schedules[scheduleKey] || { location: '', song: '', content: '' };
 
         document.getElementById('view-date').innerText = dateStr.replace(/-/g, '/');
-        
         let catPath = mainCat;
         if(midCat) catPath += ` ＞ ${midCat}`;
         if(subCat) catPath += ` ＞ ${subCat}`;
         document.getElementById('view-category').innerText = catPath;
-        
         document.getElementById('view-location').innerText = data.location || '記載なし';
         document.getElementById('view-song').innerText = data.song || '記載なし';
         document.getElementById('view-content').innerText = data.content || '記載なし';
-
         document.getElementById('modal-detail').classList.remove('hidden');
     }
 
     function transitDetailToEdit() {
         document.getElementById('modal-detail').classList.add('hidden');
-        
         const { dateStr, mainCat, midCat, subCat } = activeCellInfo;
         const scheduleKey = `${dateStr}_${mainCat}_${midCat}_${subCat}`;
         const data = schedules[scheduleKey] || { location: '', song: '', content: '' };
 
         document.getElementById('edit-date-label').innerText = dateStr.replace(/-/g, '/');
-        
         let catPath = mainCat;
         if(midCat) catPath += ` ＞ ${midCat}`;
         if(subCat) catPath += ` ＞ ${subCat}`;
         document.getElementById('edit-category-label').innerText = catPath;
-
         document.getElementById('input-location').value = data.location;
         document.getElementById('input-song').value = data.song;
         document.getElementById('input-content').value = data.content;
-
         document.getElementById('modal-edit').classList.remove('hidden');
     }
 
@@ -612,7 +570,6 @@
         e.preventDefault();
         const { dateStr, mainCat, midCat, subCat } = activeCellInfo;
         const scheduleKey = `${dateStr}_${mainCat}_${midCat}_${subCat}`;
-
         const location = document.getElementById('input-location').value.trim();
         const song = document.getElementById('input-song').value.trim();
         const content = document.getElementById('input-content').value.trim();
@@ -623,12 +580,12 @@
             delete schedules[scheduleKey];
         }
 
-        localStorage.setItem('bandSchedulesV6', JSON.stringify(schedules));
+        localStorage.setItem('gh_schedules', JSON.stringify(schedules));
         renderWBS();
+        saveToGitHub(); // クラウドへ保存
 
         document.getElementById('modal-edit').classList.add('hidden');
     }
 </script>
-
 </body>
 </html>
