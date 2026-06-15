@@ -14,18 +14,20 @@
             --text-color: #2c3e50;
             --border-color: #dcdde1; 
             
-            /* イベント系（ライブ・スタジオ等）のテーマカラー：コーラルオレンジ */
-            --bg-event-main: #ff7f50;
+            /* 各大分類のテーマカラー */
+            --bg-event-main: #ff7f50; /* イベント：コーラルオレンジ */
             --bg-event-cell: #fff5f0;
             --text-event-cell: #e65c00;
 
-            /* 楽曲制作系（リハ・制作等）のテーマカラー：ミントグリーン */
-            --bg-music-main: #2ec4b6;
+            --bg-music-main: #2ec4b6; /* 楽曲制作：ミントグリーン */
             --bg-music-cell: #f0fdfa;
             --text-music-cell: #0f766e;
 
-            /* その他の分類が追加された場合のデフォルトカラー：グレー */
-            --bg-default-main: #718093;
+            --bg-sns-main: #9b59b6; /* SNS：パープル */
+            --bg-sns-cell: #fbf0f0;
+            --text-sns-cell: #8e44ad;
+
+            --bg-default-main: #718093; /* その他：グレー */
             --bg-default-cell: #f8f9fa;
             --text-default-cell: #2f3640;
         }
@@ -52,7 +54,6 @@
         }
         h1 { font-size: 1.3rem; color: #1e272e; margin: 0; font-weight: bold; }
         
-        /* 共通ボタンスタイル */
         button {
             cursor: pointer;
             border: none;
@@ -72,7 +73,6 @@
         .btn-sub { background-color: #ffffff; color: #2f3640; border: 1px solid #dcdde1; }
         .btn-sub:hover { background-color: #f5f6fa; border-color: #c2c3c9; }
 
-        /* WBSテーブルコンテナ */
         .wbs-container {
             background: var(--card-bg);
             padding: 20px;
@@ -88,7 +88,6 @@
             margin-bottom: 20px;
         }
         
-        /* WBSテーブルスタイル */
         table.wbs-table {
             width: 100%;
             border-collapse: collapse;
@@ -110,7 +109,6 @@
         table.wbs-table .col-mid { width: 90px; text-align: left; font-weight: bold; color: #57606f; background: #fafafa; }
         table.wbs-table .col-sub { width: 110px; text-align: left; color: #2f3640; background: #fff; }
         
-        /* 大分類の行スタイル */
         table.wbs-table tr.category-row td {
             font-weight: bold;
             text-align: left;
@@ -121,9 +119,9 @@
         }
         table.wbs-table tr.category-event td { background-color: var(--bg-event-main); }
         table.wbs-table tr.category-music td { background-color: var(--bg-music-main); }
+        table.wbs-table tr.category-sns td { background-color: var(--bg-sns-main); }
         table.wbs-table tr.category-default td { background-color: var(--bg-default-main); }
 
-        /* 日付マスのスタイル */
         table.wbs-table td.cell-day {
             cursor: pointer;
             transition: all 0.15s ease-in-out;
@@ -136,8 +134,6 @@
             position: relative;
             line-height: 1.3;
         }
-        
-        /* 日付の枠ホバー */
         table.wbs-table td.cell-day:hover { 
             background: #fffdf0 !important; 
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.25); 
@@ -147,24 +143,11 @@
             border-radius: 4px;
         }
         
-        /* データがあるマスの色分け */
-        table.wbs-table td.cell-day.has-event-live { 
-            background: var(--bg-event-cell) !important; 
-            color: var(--text-event-cell); 
-            font-weight: bold;
-        }
-        table.wbs-table td.cell-day.has-event-music { 
-            background: var(--bg-music-cell) !important; 
-            color: var(--text-music-cell); 
-            font-weight: bold;
-        }
-        table.wbs-table td.cell-day.has-event-default { 
-            background: var(--bg-default-cell) !important; 
-            color: var(--text-default-cell); 
-            font-weight: bold;
-        }
+        table.wbs-table td.cell-day.has-event-live { background: var(--bg-event-cell) !important; color: var(--text-event-cell); font-weight: bold; }
+        table.wbs-table td.cell-day.has-event-music { background: var(--bg-music-cell) !important; color: var(--text-music-cell); font-weight: bold; }
+        table.wbs-table td.cell-day.has-event-sns { background: var(--bg-sns-cell) !important; color: var(--text-sns-cell); font-weight: bold; }
+        table.wbs-table td.cell-day.has-event-default { background: var(--bg-default-cell) !important; color: var(--text-default-cell); font-weight: bold; }
 
-        /* 案内用の空っぽ表示スタイル */
         .empty-notice {
             padding: 40px;
             text-align: center;
@@ -173,7 +156,6 @@
             font-weight: bold;
         }
 
-        /* モーダル */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -197,7 +179,7 @@
         .form-group input, .form-group select, .form-group textarea {
             width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ced6e0; border-radius: 6px; font-size: 0.9rem;
         }
-        .form-group input:focus, .form-group textarea:focus { border-color: #2f3640; outline: none; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #2f3640; outline: none; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
         
         .info-value { background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #e4e7eb; min-height: 1.2rem; white-space: pre-wrap; font-size: 0.95rem;}
@@ -209,7 +191,6 @@
 <div class="container">
     <header>
         <h1>🎸 迎撃乙女バンド運営スケジュール</h1>
-        
         <button id="btn-open-menu" class="btn-main">編集メニュー</button>
     </header>
 
@@ -221,11 +202,9 @@
         </div>
         <table class="wbs-table">
             <thead>
-                <tr id="table-header-days">
-                    </tr>
+                <tr id="table-header-days"></tr>
             </thead>
-            <tbody id="wbs-tbody">
-                </tbody>
+            <tbody id="wbs-tbody"></tbody>
         </table>
         <div id="div-empty-notice" class="empty-notice hidden">
             右上の「編集メニュー」から大分類を登録すると、スケジュール表が生成されます！
@@ -238,8 +217,17 @@
         <h2>メインメニュー編集（分類登録）</h2>
         <form id="form-category">
             <div class="form-group">
-                <label>大分類名（例: イベント、楽曲制作、SNS） <span style="color:red;">*必須</span></label>
-                <input type="text" id="input-main-cat" placeholder="大分類名を入力（例：イベント）" required>
+                <label>大分類名 <span style="color:red;">*必須</span></label>
+                <select id="select-main-cat">
+                    <option value="イベント">イベント</option>
+                    <option value="楽曲制作">楽曲制作</option>
+                    <option value="SNS">SNS</option>
+                    <option value="__other__">その他（手動で新しく入力する）</option>
+                </select>
+            </div>
+            <div class="form-group hidden" id="group-custom-main">
+                <label>手動入力の大分類名</label>
+                <input type="text" id="input-custom-main" placeholder="例：グッズ、ミーティング">
             </div>
             <div class="form-group">
                 <label>中分類名（任意）</label>
@@ -321,10 +309,11 @@
 
 <script>
     // --- 状態管理 ---
-    let currentDate = new Date(2026, 5, 1); // 2026年6月スタート
+    let currentDate = new Date(2026, 5, 1); // 2026年6月
     
-    let categories = JSON.parse(localStorage.getItem('bandCategoriesFlexible')) || [];
-    let schedules = JSON.parse(localStorage.getItem('bandSchedulesFlexible')) || {};
+    // 【キャッシュバグ修正】保存キーを「bandCategoriesV5」に刷新し、古いゴミデータを完全に無視して強制クリーン化
+    let categories = JSON.parse(localStorage.getItem('bandCategoriesV5')) || [];
+    let schedules = JSON.parse(localStorage.getItem('bandSchedulesV5')) || {};
 
     let activeCellInfo = { dateStr: '', mainCat: '', midCat: '', subCat: '' };
 
@@ -339,20 +328,31 @@
         document.getElementById('btn-close-menu').addEventListener('click', () => document.getElementById('modal-menu').classList.add('hidden'));
         document.getElementById('form-category').addEventListener('submit', handleCategorySubmit);
 
+        // 【追加】プルダウン連動ロジック
+        document.getElementById('select-main-cat').addEventListener('change', (e) => {
+            const customGroup = document.getElementById('group-custom-main');
+            if (e.target.value === '__other__') {
+                customGroup.classList.remove('hidden');
+                document.getElementById('input-custom-main').setAttribute('required', 'required');
+            } else {
+                customGroup.classList.add('hidden');
+                document.getElementById('input-custom-main').removeAttribute('required');
+            }
+        });
+
         document.getElementById('btn-close-detail').addEventListener('click', () => document.getElementById('modal-detail').classList.add('hidden'));
         document.getElementById('btn-go-edit').addEventListener('click', transitDetailToEdit);
         document.getElementById('btn-cancel-edit').addEventListener('click', () => document.getElementById('modal-edit').classList.add('hidden'));
         document.getElementById('form-schedule').addEventListener('submit', handleScheduleSubmit);
     });
 
-    // --- WBSガントチャートの描画 ---
+    // --- WBSの描画 ---
     function renderWBS() {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
         document.getElementById('current-month-label').innerText = `${year}年${month + 1}月`;
 
         const numDays = new Date(year, month + 1, 0).getDate();
-
         const headerRow = document.getElementById('table-header-days');
         const tbody = document.getElementById('wbs-tbody');
         const emptyNotice = document.getElementById('div-empty-notice');
@@ -361,7 +361,6 @@
         for (let d = 1; d <= numDays; d++) {
             const th = document.createElement('th');
             th.innerText = d;
-            th.style.width = '42px';
             headerRow.appendChild(th);
         }
 
@@ -377,10 +376,14 @@
         categories.forEach(cat => {
             const catRow = document.createElement('tr');
             catRow.className = 'category-row';
-            if (cat.main.includes('イベント')) {
+            
+            // 色分けクラス付与
+            if (cat.main === 'イベント') {
                 catRow.classList.add('category-event');
-            } else if (cat.main.includes('楽曲制作')) {
+            } else if (cat.main === '楽曲制作') {
                 catRow.classList.add('category-music');
+            } else if (cat.main === 'SNS') {
+                catRow.classList.add('category-sns');
             } else {
                 catRow.classList.add('category-default');
             }
@@ -397,7 +400,6 @@
                     
                     const tdMid = document.createElement('td');
                     tdMid.className = 'col-mid';
-                    // 空欄の場合はハイフン表示で美しく見せる
                     tdMid.innerText = midObj.mid || '-';
                     
                     const tdSub = document.createElement('td');
@@ -416,10 +418,12 @@
                         const scheduleKey = `${dateStr}_${cat.main}_${midObj.mid}_${sub}`;
                         
                         if (schedules[scheduleKey]) {
-                            if (cat.main.includes('イベント')) {
+                            if (cat.main === 'イベント') {
                                 cell.classList.add('has-event-live');
-                            } else if (cat.main.includes('楽曲制作')) {
+                            } else if (cat.main === '楽曲制作') {
                                 cell.classList.add('has-event-music');
+                            } else if (cat.main === 'SNS') {
+                                cell.classList.add('has-event-sns');
                             } else {
                                 cell.classList.add('has-event-default');
                             }
@@ -435,13 +439,21 @@
         });
     }
 
-    // --- 分類登録（空欄を許容するロジックに変更） ---
+    // --- 分類登録 ---
     function handleCategorySubmit(e) {
         e.preventDefault();
-        const mainCatInput = document.getElementById('input-main-cat').value.trim();
-        // 空欄の場合は空文字を設定
+        
+        // プルダウンから値を取得。その他なら自由入力欄から取得
+        const selectValue = document.getElementById('select-main-cat').value;
+        let mainCatInput = selectValue;
+        if (selectValue === '__other__') {
+            mainCatInput = document.getElementById('input-custom-main').value.trim();
+        }
+        
         const midCatInput = document.getElementById('input-mid-cat').value.trim();
         const subCatInput = document.getElementById('input-sub-cat').value.trim();
+
+        if(!mainCatInput) return;
 
         let targetMain = categories.find(c => c.main === mainCatInput);
         if (!targetMain) {
@@ -459,14 +471,14 @@
             targetMid.subs.push(subCatInput);
         }
 
-        localStorage.setItem('bandCategoriesFlexible', JSON.stringify(categories));
+        localStorage.setItem('bandCategoriesV5', JSON.stringify(categories));
         renderWBS();
         
         document.getElementById('form-category').reset();
+        document.getElementById('group-custom-main').classList.add('hidden'); // 手動入力欄を隠す
         document.getElementById('modal-menu').classList.add('hidden');
     }
 
-    // --- 詳細モーダルを開く ---
     function openDetailModal(dateStr, mainCat, midCat, subCat) {
         activeCellInfo = { dateStr, mainCat, midCat, subCat };
         const scheduleKey = `${dateStr}_${mainCat}_${midCat}_${subCat}`;
@@ -474,7 +486,6 @@
 
         document.getElementById('view-date').innerText = dateStr.replace(/-/g, '/');
         
-        // 分類ラベルの表示切り替え（空欄のものは除外してスマートに見せる）
         let catPath = mainCat;
         if(midCat) catPath += ` ＞ ${midCat}`;
         if(subCat) catPath += ` ＞ ${subCat}`;
@@ -487,7 +498,6 @@
         document.getElementById('modal-detail').classList.remove('hidden');
     }
 
-    // --- 詳細 ➡️ 編集画面への移行 ---
     function transitDetailToEdit() {
         document.getElementById('modal-detail').classList.add('hidden');
         
@@ -509,7 +519,6 @@
         document.getElementById('modal-edit').classList.remove('hidden');
     }
 
-    // --- スケジュール編集データの保存 ---
     function handleScheduleSubmit(e) {
         e.preventDefault();
         const { dateStr, mainCat, midCat, subCat } = activeCellInfo;
@@ -525,7 +534,7 @@
             delete schedules[scheduleKey];
         }
 
-        localStorage.setItem('bandSchedulesFlexible', JSON.stringify(schedules));
+        localStorage.setItem('bandSchedulesV5', JSON.stringify(schedules));
         renderWBS();
 
         document.getElementById('modal-edit').classList.add('hidden');
