@@ -104,6 +104,7 @@
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             overflow-x: auto;
+            margin-bottom: 20px;
         }
         table.wbs-table {
             width: 100%;
@@ -115,7 +116,7 @@
             border: 1px solid var(--border-color);
             padding: 10px 4px; 
             text-align: center;
-            height: 42px; /* 小分類表示のために少しだけ高さを確保 */
+            height: 42px;
         }
         table.wbs-table th { background: #f1f2f6; font-weight: bold; color: #57606f;}
         table.wbs-table .col-main { width: 100px; text-align: left; font-weight: bold; }
@@ -132,7 +133,7 @@
         table.wbs-table tr.category-default td { background-color: var(--bg-default-main); }
 
         table.wbs-table td.cell-day {
-            cursor: pointer; transition: all 0.15s ease-in-out; font-size: 0.7rem; /* 文字が入りやすいよう少し小さめに */
+            cursor: pointer; transition: all 0.15s ease-in-out; font-size: 0.7rem;
             white-space: normal; word-break: break-all; max-width: 60px; background: #ffffff; position: relative;
             line-height: 1.2;
         }
@@ -171,4 +172,234 @@
             position: relative; cursor: pointer;
         }
         .calendar-day:active { background: #f1f3f4; }
-        .calendar-day.other-month
+        .calendar-day.other-month { background: #fcfcfc; color: #ccc; }
+        
+        .day-number { font-size: 0.75rem; font-weight: bold; margin-bottom: 4px; }
+        .calendar-day:nth-child(7n+1) .day-number { color: var(--sunday-color); }
+        .calendar-day:nth-child(7n) .day-number { color: var(--saturday-color); }
+        
+        .calendar-event-dots { display: flex; flex-direction: column; gap: 2px; }
+        .event-dot {
+            font-size: 0.65rem; padding: 1px 4px; border-radius: 3px; overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap; max-width: 100%; line-height: 1.2;
+        }
+        .dot-live { background: var(--bg-event-cell); color: var(--text-event-cell); }
+        .dot-music { background: var(--bg-music-cell); color: var(--text-music-cell); }
+        .dot-sns { background: var(--bg-sns-cell); color: var(--text-sns-cell); }
+        .dot-default { background: var(--bg-default-cell); color: var(--text-default-cell); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>迎撃乙麻女バンド スケジュール＆WBS</h1>
+        <div>
+            <button class="btn-sync" onclick="syncData()">データを同期</button>
+            <button class="btn-main" onclick="switchView()">表示切替</button>
+        </div>
+    </header>
+
+    <div class="sync-status-bar" id="syncStatus">
+        データの同期に成功しました。最新の情報が表示されています。
+    </div>
+
+    <div class="month-selector">
+        <button class="btn-sub" onclick="changeMonth(-1)">◀ 前月</button>
+        <div class="month-title" id="currentMonthTitle">2026年 6月</div>
+        <button class="btn-sub" onclick="changeMonth(1)">次月 ▶</button>
+    </div>
+
+    <div class="wbs-view-wrapper" id="wbsView">
+        <table class="wbs-table">
+            <thead>
+                <tr id="wbsHeader">
+                    </tr>
+            </thead>
+            <tbody id="wbsBody">
+                </tbody>
+        </table>
+    </div>
+
+    <div class="calendar-view-wrapper" id="calendarView" style="display: none;">
+        <div class="calendar-grid" id="calendarGrid">
+            </div>
+    </div>
+</div>
+
+<script>
+    // サンプルデータ構造
+    let currentYear = 2026;
+    let currentMonth = 5; // 0=1月, 5=6月
+    let currentView = 'wbs'; // 'wbs' または 'calendar'
+
+    // カテゴリー定義
+    const categories = [
+        { id: 'event', name: 'ライブ・イベント', class: 'category-event' },
+        { id: 'music', name: '楽曲制作・練習', class: 'category-music' },
+        { id: 'sns', name: '広報・SNS発信', class: 'category-sns' }
+    ];
+
+    // 中分類とタスクデータ
+    const mockTasks = [
+        { id: 1, mainId: 'event', midName: '公式ライブ出演', day: 15, text: '本番', type: 'live' },
+        { id: 2, mainId: 'event', midName: '公式ライブ出演', day: 14, text: 'リハ', type: 'live' },
+        { id: 3, mainId: 'music', midName: '新曲レコーディング', day: 10, text: 'Rec', type: 'music' },
+        { id: 4, mainId: 'sns', midName: '生配信企画', day: 20, text: 'YouTube', type: 'sns' }
+    ];
+
+    // 初期化処理
+    window.onload = function() {
+        renderWBS();
+        renderCalendar();
+    };
+
+    // 表示ビューの切り替え
+    function switchView() {
+        const wbs = document.getElementById('wbsView');
+        const cal = document.getElementById('calendarView');
+        if (currentView === 'wbs') {
+            wbs.style.display = 'none';
+            cal.style.display = 'block';
+            currentView = 'calendar';
+        } else {
+            wbs.style.display = 'block';
+            cal.style.display = 'none';
+            currentView = 'wbs';
+        }
+    }
+
+    // 月変更
+    function changeMonth(diff) {
+        let date = new Date(currentYear, currentMonth + diff, 1);
+        currentYear = date.getFullYear();
+        currentMonth = date.getMonth();
+        document.getElementById('currentMonthTitle').innerText = `${currentYear}年 ${currentMonth + 1}月`;
+        renderWBS();
+        renderCalendar();
+    }
+
+    // 大分類アコーディオン制御（バグ修正版）
+    function toggleCategory(mainId) {
+        const midRows = document.querySelectorAll(`tr.mid-row[data-main-id="${mainId}"]`);
+        
+        // 【重要】配下の中分類行が存在しない場合は安全のために処理を抜ける（エラー防止）
+        if (midRows.length === 0) return;
+
+        const isCollapse = midRows[0].style.display === 'none';
+
+        midRows.forEach(midRow => {
+            midRow.style.display = isCollapse ? '' : 'none';
+        });
+    }
+
+    // WBS(ガントチャート)の描画
+    function renderWBS() {
+        const header = document.getElementById('wbsHeader');
+        const body = document.getElementById('wbsBody');
+        
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        
+        // ヘッダー生成
+        let headerHtml = '<th class="col-main">大分類</th><th class="col-mid">中分類項目</th>';
+        for(let d=1; d<=daysInMonth; d++) {
+            const dayOfWeek = new Date(currentYear, currentMonth, d).getDay();
+            let style = '';
+            if(dayOfWeek === 0) style = `style="color:var(--sunday-color);"`;
+            if(dayOfWeek === 6) style = `style="color:var(--saturday-color);"`;
+            headerHtml += `<th ${style}>${d}</th>`;
+        }
+        header.innerHTML = headerHtml;
+
+        // ボディ（タスク）生成
+        let bodyHtml = '';
+        categories.forEach(cat => {
+            // 大分類行
+            bodyHtml += `
+                <tr class="category-row ${cat.class}" onclick="toggleCategory('${cat.id}')">
+                    <td colspan="${daysInMonth + 2}">▼ ${cat.name}</td>
+                </tr>
+            `;
+
+            // その大分類に属する中分類の抽出
+            const filtered = mockTasks.filter(t => t.mainId === cat.id);
+            // 重複のない中分類名リスト
+            const midNames = [...new Set(filtered.map(t => t.midName))];
+
+            midNames.forEach(midName => {
+                bodyHtml += `<tr class="mid-row" data-main-id="${cat.id}">`;
+                bodyHtml += `<td class="col-main" style="color:var(--text-default-cell); background:#fafafa;"></td>`;
+                bodyHtml += `<td class="col-mid">${midName}</td>`;
+                
+                for(let d=1; d<=daysInMonth; d++) {
+                    const task = filtered.find(t => t.midName === midName && t.day === d);
+                    if(task) {
+                        bodyHtml += `<td class="cell-day has-event-${task.type}">${task.text}</td>`;
+                    } else {
+                        bodyHtml += `<td class="cell-day"></td>`;
+                    }
+                }
+                bodyHtml += `</tr>`;
+            });
+        });
+        body.innerHTML = bodyHtml;
+    }
+
+    // カレンダーの描画
+    function renderCalendar() {
+        const grid = document.getElementById('calendarGrid');
+        grid.innerHTML = '';
+
+        const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+        weekdays.forEach(w => {
+            grid.innerHTML += `<div class="weekday-label">${w}</div>`;
+        });
+
+        const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        const prevDaysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+
+        // 前月の残り日数埋め
+        for(let i = firstDayIndex; i > 0; i--) {
+            grid.innerHTML += `
+                <div class="calendar-day other-month">
+                    <div class="day-number">${prevDaysInMonth - i + 1}</div>
+                </div>`;
+        }
+
+        // 当月の日数埋め
+        for(let d = 1; d <= daysInMonth; d++) {
+            const dayTasks = mockTasks.filter(t => t.day === d);
+            let dotsHtml = '<div class="calendar-event-dots">';
+            dayTasks.forEach(t => {
+                dotsHtml += `<div class="event-dot dot-${t.type}">${t.text}</div>`;
+            });
+            dotsHtml += '</div>';
+
+            grid.innerHTML += `
+                <div class="calendar-day">
+                    <div class="day-number">${d}</div>
+                    ${dotsHtml}
+                </div>`;
+        }
+    }
+
+    // ダミー同期関数
+    function syncData() {
+        const statusBar = document.getElementById('syncStatus');
+        statusBar.style.background = '#e3f2fd';
+        statusBar.style.color = '#1e88e5';
+        statusBar.innerText = 'データを同期中...';
+        
+        setTimeout(() => {
+            statusBar.style.background = '#e8f5e9';
+            statusBar.style.color = '#27ae60';
+            statusBar.innerText = '最新データの同期が完了しました。';
+            renderWBS();
+            renderCalendar();
+        }, 800);
+    }
+</script>
+
+</body>
+</html>
