@@ -26,7 +26,7 @@
             --bg-sns-cell: #fbf0f0;
             --text-sns-cell: #8e44ad;
             
-            /* 新設：各メンバースケジュール用のカラー */
+            /* 各メンバースケジュール用のカラー */
             --bg-member-main: #e67e22;
             --bg-member-cell: #fdf5e6;
             --text-member-cell: #d35400;
@@ -338,7 +338,6 @@
     </div>
 </div>
 
-<!-- 分類追加モーダル -->
 <div id="modal-menu" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>分類行（予定のベース）の追加</h2>
@@ -378,7 +377,6 @@
     </div>
 </div>
 
-<!-- 閲覧詳細モーダル -->
 <div id="modal-detail" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>予定の詳細</h2>
@@ -386,7 +384,6 @@
         <div class="form-group"><label>時間</label><div id="view-time" class="info-value"></div></div>
         <div class="form-group"><label>分類</label><div id="view-category" class="info-value"></div></div>
         <div class="form-group"><label>小分類（項目名）</label><div id="view-sub-cat" class="info-value"></div></div>
-        <div class="form-group"><label>場所</label><div id="view-location" class="info-value"></div></div>
         <div class="form-group"><label>楽曲</label><div id="view-song" class="info-value"></div></div>
         <div class="form-group"><label>内容詳細</label><div id="view-content" class="info-value"></div></div>
         <div class="modal-actions">
@@ -396,7 +393,6 @@
     </div>
 </div>
 
-<!-- カレンダー日付タップ時のモーダル -->
 <div id="modal-day-detail" class="modal-overlay hidden">
     <div class="modal-card">
         <h2 id="modal-day-label">予定一覧</h2>
@@ -408,7 +404,6 @@
     </div>
 </div>
 
-<!-- 編集・新規登録モーダル -->
 <div id="modal-edit-schedule" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>スケジュールの入力・編集</h2>
@@ -437,13 +432,8 @@
             </div>
             <div class="form-group">
                 <label>小分類（項目名）</label>
-                <input type="text" id="input-sub-cat-edit" list="datalist-sub-cats" placeholder="例: 新宿LOFTワンマン、新曲Aレコーディングなど">
+                <input type="text" id="input-sub-cat-edit" list="datalist-sub-cats" placeholder="例: 新宿LOFTワンマン、新曲Aレコーディング、NG枠など">
                 <datalist id="datalist-sub-cats"></datalist>
-            </div>
-            <div class="form-group">
-                <label>場所</label>
-                <input type="text" id="input-location" list="datalist-locations" placeholder="例: 吉祥寺WARP、スタジオペンタなど">
-                <datalist id="datalist-locations"></datalist>
             </div>
             
             <div class="form-group">
@@ -460,7 +450,6 @@
                     📅 別日もまとめて同じ内容で登録する
                 </label>
                 <div id="area-multi-date-picker" class="multi-date-selector hidden">
-                    <!-- 無限月めくり式ページャー -->
                     <div class="multi-month-pager">
                         <button type="button" id="btn-multi-prev-month" class="btn-sub">◀ 前の月</button>
                         <span id="multi-month-current-label">2026年6月</span>
@@ -482,7 +471,6 @@
     </div>
 </div>
 
-<!-- 分類名編集・削除モーダル -->
 <div id="modal-edit-category" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>分類行の変更・削除</h2>
@@ -637,7 +625,6 @@
         }
     }
 
-    // ★修正：大分類に「各メンバースケジュール」が追加されたことに伴う入力フォームの切り替えロジック
     function updateFormInputs() {
         const mainSelect = document.getElementById('select-main-cat').value;
         const customMainGroup = document.getElementById('group-custom-main');
@@ -655,7 +642,6 @@
             midSelectGroup.classList.remove('hidden');
             midTextGroup.classList.add('hidden');
         } else if (mainSelect === '各メンバースケジュール') {
-            // 各メンバースケジュールの時はラベルを「中分類名（氏名）」に変更
             labelMidText.innerText = "中分類名（氏名）*必須";
             inputMid.placeholder = "例: 乙女A、Dr.山田 などメンバー名を入力";
         } else if (mainSelect === '楽曲制作') {
@@ -772,9 +758,16 @@
                         else cell.classList.add('has-event-default');
                         
                         const timePrefix = data.startTime ? `${data.startTime}\n` : '';
-                        cell.innerText = timePrefix + (data.location || data.content || '有');
+                        cell.innerText = timePrefix + (data.content || '有');
                     }
-                    cell.addEventListener('click', () => openWBSDetailModal(dateStr, cat.main, mid, ''));
+                    // ★ 各メンバースケジュールの場合は直接編集画面へ
+                    cell.addEventListener('click', () => {
+                        if (cat.main === '各メンバースケジュール') {
+                            openDirectEditForm(dateStr, cat.main, mid, '');
+                        } else {
+                            openWBSDetailModal(dateStr, cat.main, mid, '');
+                        }
+                    });
                     row.appendChild(cell);
                 }
                 tbody.appendChild(row);
@@ -822,9 +815,16 @@
                             else cell.classList.add('has-event-default');
                             
                             const timePrefix = data.startTime ? `${data.startTime}\n` : '';
-                            cell.innerText = timePrefix + (data.location || data.content || '有');
+                            cell.innerText = timePrefix + (data.content || '有');
                         }
-                        cell.addEventListener('click', () => openWBSDetailModal(dateStr, cat.main, mid, subCatName));
+                        // ★ 子要素の行でも、各メンバースケジュールの場合は直接編集画面へ
+                        cell.addEventListener('click', () => {
+                            if (cat.main === '各メンバースケジュール') {
+                                openDirectEditForm(dateStr, cat.main, mid, subCatName);
+                            } else {
+                                openWBSDetailModal(dateStr, cat.main, mid, subCatName);
+                            }
+                        });
                         subRow.appendChild(cell);
                     }
                     tbody.appendChild(subRow);
@@ -903,7 +903,7 @@
                     
                     const timeStr = data.startTime ? `[${data.startTime}] ` : '';
                     const subNameText = data.subCat || (parts.slice(3).join('_')) || '';
-                    badge.innerText = `${timeStr}${midCat}:${subNameText || data.location || '予定'}`;
+                    badge.innerText = `${timeStr}${midCat}:${subNameText || '予定'}`;
                     badgesContainer.appendChild(badge);
                 }
             }
@@ -937,7 +937,7 @@
         const { exactKey, data } = findScheduleData(dateStr, mainCat, midCat, subCatKey);
         
         activeCellInfo = { dateStr, mainCat, midCat, subCatKey };
-        const activeData = data || { subCat: subCatKey, location: '', song: '', content: '', startTime: '', endTime: '' };
+        const activeData = data || { subCat: subCatKey, song: '', content: '', startTime: '', endTime: '' };
 
         document.getElementById('view-date').innerText = dateStr.replace(/-/g, '/');
         const tStr = activeData.startTime ? `${activeData.startTime} ～ ${activeData.endTime || '未設定'}` : '終日予定';
@@ -945,7 +945,6 @@
 
         document.getElementById('view-category').innerText = `${mainCat} ＞ ${midCat}`;
         document.getElementById('view-sub-cat').innerText = activeData.subCat || '未設定（空欄）';
-        document.getElementById('view-location').innerText = activeData.location || '記載なし';
         document.getElementById('view-song').innerText = activeData.song || '記載なし';
         document.getElementById('view-content').innerText = activeData.content || '記載なし';
         document.getElementById('modal-detail').classList.remove('hidden');
@@ -991,7 +990,6 @@
                         <div class="item-title">📍 小分類: ${displaySubCat}</div>
                         <div style="font-size:0.78rem; color:#d35400; font-weight:bold; margin-bottom: 4px;">${timeDisplay}</div>
                         <div style="font-size:0.75rem; color:#555;">
-                            ${data.location ? `🏠 場所: ${data.location}` : ''} 
                             ${data.song ? ` 🎵 楽曲: ${data.song}` : ''}
                         </div>
                         ${data.content ? `<div style="font-size:0.75rem; margin-top:6px; color:#333; background:#fff; padding:6px; border-radius:4px; border:1px solid #e0e0e0; white-space:pre-wrap;">${data.content}</div>` : ''}
@@ -1046,7 +1044,6 @@
         document.getElementById('group-edit-cat-label').classList.add('hidden');
 
         document.getElementById('input-sub-cat-edit').value = '';
-        document.getElementById('input-location').value = '';
         
         setSongInputs([]);
         document.getElementById('input-content').value = '';
@@ -1056,7 +1053,7 @@
         document.getElementById('area-multi-date-picker').classList.add('hidden');
 
         setupSubCatDatalist('', '');
-        setupLocationAndSongDatalist();
+        setupSongDatalist();
 
         document.getElementById('modal-edit-schedule').classList.remove('hidden');
         activeCellInfo.subCatKey = ''; 
@@ -1086,7 +1083,7 @@
         const { data } = findScheduleData(dateStr, mainCat, midCat, subCatKey);
 
         activeCellInfo = { dateStr, mainCat, midCat, subCatKey };
-        const activeData = data || { subCat: subCatKey, location: '', song: '', content: '', startTime: '', endTime: '' };
+        const activeData = data || { subCat: subCatKey, song: '', content: '', startTime: '', endTime: '' };
 
         document.getElementById('input-date-edit').value = dateStr;
         document.getElementById('input-start-time').value = activeData.startTime || '';
@@ -1100,7 +1097,6 @@
         document.getElementById('group-edit-cat-label').classList.remove('hidden');
 
         document.getElementById('input-sub-cat-edit').value = activeData.subCat || '';
-        document.getElementById('input-location').value = activeData.location || '';
         
         let songArray = [];
         if (activeData.song) {
@@ -1115,7 +1111,7 @@
         document.getElementById('area-multi-date-picker').classList.add('hidden');
 
         setupSubCatDatalist(mainCat, midCat);
-        setupLocationAndSongDatalist();
+        setupSongDatalist();
 
         document.getElementById('input-date-edit').onchange = function() {
             if (document.getElementById('chk-multi-date').checked) {
@@ -1203,27 +1199,19 @@
         });
     }
 
-    function setupLocationAndSongDatalist() {
-        const locationDatalist = document.getElementById('datalist-locations');
+    function setupSongDatalist() {
         const songDatalist = document.getElementById('datalist-songs');
-        locationDatalist.innerHTML = '';
         songDatalist.innerHTML = '';
-
-        const locationSet = new Set();
         const songSet = new Set();
 
         Object.keys(schedules).forEach(key => {
             const data = schedules[key];
-            if (data) {
-                if (data.location) locationSet.add(data.location.trim());
-                if (data.song) {
-                    const splitSongs = data.song.split(/[,\n、]/).map(s => s.trim()).filter(s => s !== "");
-                    splitSongs.forEach(s => songSet.add(s));
-                }
+            if (data && data.song) {
+                const splitSongs = data.song.split(/[,\n、]/).map(s => s.trim()).filter(s => s !== "");
+                splitSongs.forEach(s => songSet.add(s));
             }
         });
 
-        locationSet.forEach(loc => { const opt = document.createElement('option'); opt.value = loc; locationDatalist.appendChild(opt); });
         songSet.forEach(song => { const opt = document.createElement('option'); opt.value = song; songDatalist.appendChild(opt); });
     }
 
@@ -1264,7 +1252,6 @@
         }
 
         const subCat = document.getElementById('input-sub-cat-edit').value.trim();
-        const location = document.getElementById('input-location').value.trim();
         
         const songInputs = document.querySelectorAll('.input-song-item');
         const songVals = [];
@@ -1286,12 +1273,12 @@
 
         const { exactKey } = findScheduleData(dateStr, mainCat, midCat, subCatKey);
 
-        if (subCat || location || song || content || startTime) {
+        if (subCat || song || content || startTime) {
             delete schedules[exactKey];
 
             targetDates.forEach(dStr => {
                 const newKey = `${dStr}_${mainCat}_${midCat}_${subCat}`;
-                schedules[newKey] = { subCat, location, song, content, startTime, endTime };
+                schedules[newKey] = { subCat, song, content, startTime, endTime };
             });
 
             if (finalDateStr !== dateStr) {
