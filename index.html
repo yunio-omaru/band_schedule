@@ -281,10 +281,10 @@
         .multi-date-item input { margin: 2px 0 0 0; cursor: pointer; width: auto; }
         .multi-date-item:hover { background: #e1f5fe; }
 
-        /* まとめて登録用の月切り替えタブ */
-        .multi-month-tabs { display: flex; border-bottom: 1px solid #dadce0; margin-bottom: 8px; gap: 2px; }
-        .multi-month-tab { flex: 1; padding: 6px; text-align: center; background: #f1f2f6; border: 1px solid #dadce0; border-bottom: none; border-radius: 6px 6px 0 0; font-size: 0.75rem; font-weight: bold; cursor: pointer; color: #57606f; }
-        .multi-month-tab.active { background: white; border-bottom: 2px solid white; color: #d35400; position: relative; bottom: -1px; }
+        /* 無限一括選択用の月切り替えヘッダー */
+        .multi-month-pager { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #dadce0; padding: 6px 10px; border-radius: 6px; margin-bottom: 10px; }
+        .multi-month-pager span { font-weight: bold; font-size: 0.85rem; color: #d35400; }
+        .multi-month-pager button { padding: 4px 10px; font-size: 0.75rem; }
     </style>
 </head>
 <body>
@@ -447,8 +447,12 @@
                     📅 別日もまとめて同じ内容で登録する
                 </label>
                 <div id="area-multi-date-picker" class="multi-date-selector hidden">
-                    <div class="multi-month-tabs" id="multi-month-tabs-container"></div>
-                    <span style="font-size: 0.75rem; color: #666;">まとめて登録したい日付にチェックを入れてください：</span>
+                    <div class="multi-month-pager">
+                        <button type="button" id="btn-multi-prev-month" class="btn-sub">◀ 前の月</button>
+                        <span id="multi-month-current-label">2026年6月</span>
+                        <button type="button" id="btn-multi-next-month" class="btn-sub">次の月 ▶</button>
+                    </div>
+                    <span style="font-size: 0.75rem; color: #666;">まとめて登録したい日付にチェックを入れてください（月を切り替えても選択は記憶されます）：</span>
                     <div id="multi-date-grid-container" class="multi-date-grid"></div>
                 </div>
             </div>
@@ -493,7 +497,7 @@
     let activeCellInfo = { dateStr: '', mainCat: '', midCat: '', subCatKey: '' }; 
     let activeCatEditInfo = { type: '', main: '', mid: '' }; 
 
-    // タブ選択中の「一括登録用対象年月」保持用変数
+    // 一括登録用の対象年月（無限送り・戻り用）
     let multiDatePickerSelectedMonth = { year: 2026, month: 5 }; 
     // 月をまたいでチェックを入れた日付のグローバル保管用オブジェクト
     let checkedDatesGlobal = {};
@@ -530,21 +534,39 @@
         document.getElementById('form-schedule-save').addEventListener('submit', handleScheduleSubmit);
         document.getElementById('btn-delete-schedule').addEventListener('click', handleScheduleDelete);
 
+        // ★修正：別日登録の[前の月]ボタンの動作ロジック（年月のオブジェクトをインクリメント・デクリメントして正しく再描画）
+        document.getElementById('btn-multi-prev-month').addEventListener('click', () => {
+            multiDatePickerSelectedMonth.month--;
+            if (multiDatePickerSelectedMonth.month < 0) {
+                multiDatePickerSelectedMonth.month = 11;
+                multiDatePickerSelectedMonth.year--;
+            }
+            generateMultiDateGrid();
+        });
+
+        // ★修正：別日登録の[次の月]ボタンの動作ロジック
+        document.getElementById('btn-multi-next-month').addEventListener('click', () => {
+            multiDatePickerSelectedMonth.month++;
+            if (multiDatePickerSelectedMonth.month > 11) {
+                multiDatePickerSelectedMonth.month = 0;
+                multiDatePickerSelectedMonth.year++;
+            }
+            generateMultiDateGrid();
+        });
+
         document.getElementById('chk-multi-date').addEventListener('change', (e) => {
             const area = document.getElementById('area-multi-date-picker');
             if (e.target.checked) {
                 area.classList.remove('hidden');
-                // チェックを開いた際、グローバル管理を初期化して基準日を追加
                 checkedDatesGlobal = {};
                 const baseDate = document.getElementById('input-date-edit').value || activeCellInfo.dateStr;
                 if(baseDate) checkedDatesGlobal[baseDate] = true;
                 
-                // 基準日の月を初期表示月に設定
                 if(baseDate) {
                     const parts = baseDate.split('-');
                     multiDatePickerSelectedMonth = { year: parseInt(parts[0],10), month: parseInt(parts[1],10) - 1 };
                 }
-                generateMultiDateTabsAndGrid();
+                generateMultiDateGrid();
             } else {
                 area.classList.add('hidden');
             }
@@ -1018,19 +1040,18 @@
 
         document.getElementById('input-date-edit').onchange = function() {
             if (document.getElementById('chk-multi-date').checked) {
-                // 日付が直接変わった場合は選択グローバル初期化
                 checkedDatesGlobal = {};
                 if(this.value) checkedDatesGlobal[this.value] = true;
                 const parts = this.value.split('-');
                 multiDatePickerSelectedMonth = { year: parseInt(parts[0],10), month: parseInt(parts[1],10) - 1 };
-                generateMultiDateTabsAndGrid();
+                generateMultiDateGrid();
             }
         };
 
         catSelect.onchange = function() {
             const parts = this.value.split('___');
             setupSubCatDatalist(parts[0], parts[1]);
-            if (document.getElementById('chk-multi-date').checked) generateMultiDateTabsAndGrid();
+            if (document.getElementById('chk-multi-date').checked) generateMultiDateGrid();
         };
         if(catSelect.value) {
             const parts = catSelect.value.split('___');
@@ -1079,18 +1100,16 @@
                 if(this.value) checkedDatesGlobal[this.value] = true;
                 const parts = this.value.split('-');
                 multiDatePickerSelectedMonth = { year: parseInt(parts[0],10), month: parseInt(parts[1],10) - 1 };
-                generateMultiDateTabsAndGrid();
+                generateMultiDateGrid();
             }
         };
 
         document.getElementById('modal-edit-schedule').classList.remove('hidden');
     }
 
-    // ★ 修正・拡張：前月・今月・次月を切り替えて一括チェックできる関数
-    function generateMultiDateTabsAndGrid() {
-        const tabsContainer = document.getElementById('multi-month-tabs-container');
+    function generateMultiDateGrid() {
+        const labelContainer = document.getElementById('multi-month-current-label');
         const gridContainer = document.getElementById('multi-date-grid-container');
-        tabsContainer.innerHTML = '';
         gridContainer.innerHTML = '';
 
         const currentDateValue = document.getElementById('input-date-edit').value || activeCellInfo.dateStr;
@@ -1098,36 +1117,13 @@
 
         const parts = currentDateValue.split('-');
         const baseYear = parseInt(parts[0], 10);
-        const baseMonth = parseInt(parts[1], 10) - 1; // 0-11
+        const baseMonth = parseInt(parts[1], 10) - 1; 
         const baseDay = parseInt(parts[2], 10);
 
-        // 前月・今月・次月の3つのDateオブジェクトを作成
-        const monthsOpt = [
-            new Date(baseYear, baseMonth - 1, 1),
-            new Date(baseYear, baseMonth, 1),
-            new Date(baseYear, baseMonth + 1, 1)
-        ];
-
-        // 1. タブメニューの描画
-        monthsOpt.forEach(d => {
-            const y = d.getFullYear();
-            const m = d.getMonth();
-            const tab = document.createElement('div');
-            tab.className = 'multi-month-tab';
-            if (multiDatePickerSelectedMonth.year === y && multiDatePickerSelectedMonth.month === m) {
-                tab.classList.add('active');
-            }
-            tab.innerText = `${y}年${m + 1}月`;
-            tab.addEventListener('click', () => {
-                multiDatePickerSelectedMonth = { year: y, month: m };
-                generateMultiDateTabsAndGrid();
-            });
-            tabsContainer.appendChild(tab);
-        });
-
-        // 2. 選択されている月のグリッドを描画
         const targetYear = multiDatePickerSelectedMonth.year;
         const targetMonth = multiDatePickerSelectedMonth.month;
+        labelContainer.innerText = `${targetYear}年${targetMonth + 1}月`;
+
         const totalDays = new Date(targetYear, targetMonth + 1, 0).getDate();
 
         for (let d = 1; d <= totalDays; d++) {
@@ -1135,7 +1131,6 @@
             const label = document.createElement('label');
             label.className = 'multi-date-item';
             
-            // 完全に基準日そのものだった場合はグレーアウトで選択固定
             const isBaseDate = (targetYear === baseYear && targetMonth === baseMonth && d === baseDay);
             if (isBaseDate) {
                 label.style.background = '#e0e0e0';
@@ -1149,7 +1144,6 @@
                 <input type="checkbox" class="cb-target-multidate" value="${dateStr}" ${isChecked ? 'checked' : ''} ${isBaseDate ? 'disabled' : ''}>
             `;
 
-            // チェックボックスの状態変化をグローバル配列へ即時反映
             const checkbox = label.querySelector('input');
             if (!isBaseDate) {
                 checkbox.addEventListener('change', (e) => {
@@ -1261,7 +1255,6 @@
         const finalDateStr = document.getElementById('input-date-edit').value || dateStr;
         const isMultiDate = document.getElementById('chk-multi-date').checked;
         
-        // ★ 修正：グローバル管理（月またぎ対応）から選択されたすべての日付を取得
         let targetDates = [finalDateStr];
         if (isMultiDate) {
             targetDates = Object.keys(checkedDatesGlobal);
