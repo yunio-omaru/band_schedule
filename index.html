@@ -785,7 +785,15 @@
                             
                             const timePrefix = data.startTime ? `${data.startTime}\n` : '';
                             const locSuffix = data.location ? `\n@${data.location}` : '';
-                            cell.innerText = timePrefix + (data.content || '有') + locSuffix;
+                            // 内容詳細(content)がない場合は空文字、ある場合は改行付きで追加
+                            const contentText = data.content ? `\n${data.content}` : '';
+                            
+                            // タイムスタンプ、場所、内容すべてが空の場合は何も表示しない
+                            if (!data.startTime && !data.location && !data.content) {
+                                cell.innerText = '';
+                            } else {
+                                cell.innerText = `${data.startTime || ''}${data.startTime && data.location ? '\n' : ''}${data.location ? '@'+data.location : ''}${contentText}`.trim();
+                            }
                         }
                     }
                     cell.addEventListener('click', () => {
@@ -839,14 +847,20 @@
                             
                             const timePrefix = data.startTime ? `${data.startTime}\n` : '';
                             const locSuffix = data.location ? `\n@${data.location}` : '';
-                            cell.innerText = timePrefix + (data.content || '有') + locSuffix;
+                            const contentText = data.content ? `\n${data.content}` : '';
+
+                            if (!data.startTime && !data.location && !data.content) {
+                                cell.innerText = '';
+                            } else {
+                                cell.innerText = `${data.startTime || ''}${data.startTime && data.location ? '\n' : ''}${data.location ? '@'+data.location : ''}${contentText}`.trim();
+                            }
                         }
                         cell.addEventListener('click', () => {
                             openWBSDetailModal(dateStr, cat.main, mid, subCatName);
                         });
                         subRow.appendChild(cell);
                     }
-                    tbody.appendChild(subRow);
+                    subRow.appendChild(cell);
                 });
             });
         });
