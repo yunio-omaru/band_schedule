@@ -26,6 +26,11 @@
             --bg-sns-cell: #fbf0f0;
             --text-sns-cell: #8e44ad;
             
+            /* 新設：各メンバースケジュール用のカラー */
+            --bg-member-main: #e67e22;
+            --bg-member-cell: #fdf5e6;
+            --text-member-cell: #d35400;
+            
             --bg-default-main: #718093; 
             --bg-default-cell: #f8f9fa;
             --text-default-cell: #2f3640;
@@ -166,6 +171,7 @@
         table.wbs-table tr.category-event td { background-color: var(--bg-event-main); }
         table.wbs-table tr.category-music td { background-color: var(--bg-music-main); }
         table.wbs-table tr.category-sns td { background-color: var(--bg-sns-main); }
+        table.wbs-table tr.category-member td { background-color: var(--bg-member-main); }
         table.wbs-table tr.category-default td { background-color: var(--bg-default-main); }
 
         table.wbs-table td.cell-day {
@@ -179,6 +185,7 @@
         table.wbs-table td.cell-day.has-event-live { background: var(--bg-event-cell) !important; color: var(--text-event-cell); font-weight: bold; }
         table.wbs-table td.cell-day.has-event-music { background: var(--bg-music-cell) !important; color: var(--text-music-cell); font-weight: bold; }
         table.wbs-table td.cell-day.has-event-sns { background: var(--bg-sns-cell) !important; color: var(--text-sns-cell); font-weight: bold; }
+        table.wbs-table td.cell-day.has-event-member { background: var(--bg-member-cell) !important; color: var(--text-member-cell); font-weight: bold; }
         table.wbs-table td.cell-day.has-event-default { background: var(--bg-default-cell) !important; color: var(--text-default-cell); font-weight: bold; }
 
         table.wbs-table tr.row-done td {
@@ -234,6 +241,7 @@
         .badge-event { background-color: var(--bg-event-main); }
         .badge-music { background-color: var(--bg-music-main); }
         .badge-sns { background-color: var(--bg-sns-main); }
+        .badge-member { background-color: var(--bg-member-main); }
         .badge-default { background-color: var(--bg-default-main); }
 
         .wbs-view-wrapper { display: none; }
@@ -330,6 +338,7 @@
     </div>
 </div>
 
+<!-- 分類追加モーダル -->
 <div id="modal-menu" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>分類行（予定のベース）の追加</h2>
@@ -340,6 +349,7 @@
                     <option value="イベント">イベント</option>
                     <option value="楽曲制作">楽曲制作</option>
                     <option value="SNS">SNS</option>
+                    <option value="各メンバースケジュール">各メンバースケジュール</option>
                     <option value="__other__">その他（手動入力）</option>
                 </select>
             </div>
@@ -357,7 +367,7 @@
                 </select>
             </div>
             <div class="form-group" id="group-mid-text">
-                <label id="label-mid-text">中分類名</label>
+                <label id="label-mid-text">中分類名（氏名）</label>
                 <input type="text" id="input-mid-cat">
             </div>
             <div class="modal-actions">
@@ -368,6 +378,7 @@
     </div>
 </div>
 
+<!-- 閲覧詳細モーダル -->
 <div id="modal-detail" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>予定の詳細</h2>
@@ -385,6 +396,7 @@
     </div>
 </div>
 
+<!-- カレンダー日付タップ時のモーダル -->
 <div id="modal-day-detail" class="modal-overlay hidden">
     <div class="modal-card">
         <h2 id="modal-day-label">予定一覧</h2>
@@ -396,6 +408,7 @@
     </div>
 </div>
 
+<!-- 編集・新規登録モーダル -->
 <div id="modal-edit-schedule" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>スケジュールの入力・編集</h2>
@@ -447,6 +460,7 @@
                     📅 別日もまとめて同じ内容で登録する
                 </label>
                 <div id="area-multi-date-picker" class="multi-date-selector hidden">
+                    <!-- 無限月めくり式ページャー -->
                     <div class="multi-month-pager">
                         <button type="button" id="btn-multi-prev-month" class="btn-sub">◀ 前の月</button>
                         <span id="multi-month-current-label">2026年6月</span>
@@ -468,6 +482,7 @@
     </div>
 </div>
 
+<!-- 分類名編集・削除モーダル -->
 <div id="modal-edit-category" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>分類行の変更・削除</h2>
@@ -497,9 +512,7 @@
     let activeCellInfo = { dateStr: '', mainCat: '', midCat: '', subCatKey: '' }; 
     let activeCatEditInfo = { type: '', main: '', mid: '' }; 
 
-    // 一括登録用の対象年月（無限送り・戻り用）
     let multiDatePickerSelectedMonth = { year: 2026, month: 5 }; 
-    // 月をまたいでチェックを入れた日付のグローバル保管用オブジェクト
     let checkedDatesGlobal = {};
 
     function findScheduleData(dateStr, mainCat, midCat, subCatKey) {
@@ -534,7 +547,6 @@
         document.getElementById('form-schedule-save').addEventListener('submit', handleScheduleSubmit);
         document.getElementById('btn-delete-schedule').addEventListener('click', handleScheduleDelete);
 
-        // ★修正：別日登録の[前の月]ボタンの動作ロジック（年月のオブジェクトをインクリメント・デクリメントして正しく再描画）
         document.getElementById('btn-multi-prev-month').addEventListener('click', () => {
             multiDatePickerSelectedMonth.month--;
             if (multiDatePickerSelectedMonth.month < 0) {
@@ -544,7 +556,6 @@
             generateMultiDateGrid();
         });
 
-        // ★修正：別日登録の[次の月]ボタンの動作ロジック
         document.getElementById('btn-multi-next-month').addEventListener('click', () => {
             multiDatePickerSelectedMonth.month++;
             if (multiDatePickerSelectedMonth.month > 11) {
@@ -626,20 +637,27 @@
         }
     }
 
+    // ★修正：大分類に「各メンバースケジュール」が追加されたことに伴う入力フォームの切り替えロジック
     function updateFormInputs() {
         const mainSelect = document.getElementById('select-main-cat').value;
         const customMainGroup = document.getElementById('group-custom-main');
         const midSelectGroup = document.getElementById('group-mid-select');
         const midTextGroup = document.getElementById('group-mid-text');
+        const labelMidText = document.getElementById('label-mid-text');
         const inputMid = document.getElementById('input-mid-cat');
 
         customMainGroup.classList.add('hidden');
         midSelectGroup.classList.add('hidden');
         midTextGroup.classList.remove('hidden');
+        labelMidText.innerText = "中分類名";
 
         if (mainSelect === 'イベント') {
             midSelectGroup.classList.remove('hidden');
             midTextGroup.classList.add('hidden');
+        } else if (mainSelect === '各メンバースケジュール') {
+            // 各メンバースケジュールの時はラベルを「中分類名（氏名）」に変更
+            labelMidText.innerText = "中分類名（氏名）*必須";
+            inputMid.placeholder = "例: 乙女A、Dr.山田 などメンバー名を入力";
         } else if (mainSelect === '楽曲制作') {
             inputMid.placeholder = '※企画名や曲名を記載';
         } else if (mainSelect === 'SNS') {
@@ -691,6 +709,7 @@
             if (cat.main === 'イベント') catRow.classList.add('category-event');
             else if (cat.main === '楽曲制作') catRow.classList.add('category-music');
             else if (cat.main === 'SNS') catRow.classList.add('category-sns');
+            else if (cat.main === '各メンバースケジュール') catRow.classList.add('category-member');
             else catRow.classList.add('category-default');
             
             const catTd = document.createElement('td');
@@ -749,6 +768,7 @@
                         if (cat.main === 'イベント') cell.classList.add('has-event-live');
                         else if (cat.main === '楽曲制作') cell.classList.add('has-event-music');
                         else if (cat.main === 'SNS') cell.classList.add('has-event-sns');
+                        else if (cat.main === '各メンバースケジュール') cell.classList.add('has-event-member');
                         else cell.classList.add('has-event-default');
                         
                         const timePrefix = data.startTime ? `${data.startTime}\n` : '';
@@ -798,6 +818,7 @@
                             if (cat.main === 'イベント') cell.classList.add('has-event-live');
                             else if (cat.main === '楽曲制作') cell.classList.add('has-event-music');
                             else if (cat.main === 'SNS') cell.classList.add('has-event-sns');
+                            else if (cat.main === '各メンバースケジュール') cell.classList.add('has-event-member');
                             else cell.classList.add('has-event-default');
                             
                             const timePrefix = data.startTime ? `${data.startTime}\n` : '';
@@ -877,6 +898,7 @@
                     if (mainCat === 'イベント') badge.classList.add('badge-event');
                     else if (mainCat === '楽曲制作') badge.classList.add('badge-music');
                     else if (mainCat === 'SNS') badge.classList.add('badge-sns');
+                    else if (mainCat === '各メンバースケジュール') badge.classList.add('badge-member');
                     else badge.classList.add('badge-default');
                     
                     const timeStr = data.startTime ? `[${data.startTime}] ` : '';
@@ -959,6 +981,7 @@
                     if (main === 'イベント') tagClass = 'badge-event';
                     else if (main === '楽曲制作') tagClass = 'badge-music';
                     else if (main === 'SNS') tagClass = 'badge-sns';
+                    else if (main === '各メンバースケジュール') tagClass = 'badge-member';
 
                     const timeDisplay = data.startTime ? `⏰ 時間: ${data.startTime}～${data.endTime || ''}` : '⏰ 終日';
                     const displaySubCat = data.subCat || subKey || '未設定';
