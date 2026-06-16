@@ -161,6 +161,7 @@
         table.wbs-table .col-main { width: 100px; text-align: left; font-weight: bold; }
         table.wbs-table .col-mid { width: 150px; text-align: left; font-weight: bold; color: #57606f; background: #fafafa; cursor: pointer; }
         table.wbs-table .col-mid:hover { background: #e0e0e0 !important; }
+        table.wbs-table .col-sub { width: 150px; text-align: left; font-style: italic; color: #7f8c8d; background: #fdfdfd; padding-left: 12px; }
         
         table.wbs-table tr.category-row td {
             font-weight: bold; text-align: left; font-size: 0.95rem; padding: 10px 15px; color: white; cursor: pointer;
@@ -751,12 +752,12 @@
             catRow.appendChild(tdMain);
 
             const tdMidLabel = document.createElement('td');
-            tdMidLabel.innerText = "＋ 新規サブ項目を追加";
+            tdMidLabel.innerText = "＋ 新規中分類を追加";
             tdMidLabel.style.fontStyle = 'italic';
             tdMidLabel.style.fontSize = '0.75rem';
             tdMidLabel.className = 'col-fixed';
             tdMidLabel.addEventListener('click', () => {
-                const subName = prompt(`【${cat.main}】の新しい中分類サブ項目（または担当など）の名前を入力してください:`);
+                const subName = prompt(`【${cat.main}】の新しい中分類項目（または担当など）の名前を入力してください:`);
                 if(subName && subName.trim()) {
                     cat.mids.push(subName.trim());
                     localStorage.setItem('ss_categories2', JSON.stringify(categories));
@@ -773,8 +774,25 @@
             }
             tbody.appendChild(catRow);
 
-            // 中分類サブ項目（小項目）のループ出力
+            // 中分類項目のループ出力
             cat.mids.forEach(mid => {
+                // 先にこの「大分類・中分類」配下にある全予定データから、入力されている一意の「小分類名（subCat）」を集める
+                const uniqueSubCats = new Set();
+                Object.keys(schedules).forEach(key => {
+                    const parts = key.split('_');
+                    if (parts.length >= 3) {
+                        const m = parts[1];
+                        const d = parts[2];
+                        if (m === cat.main && d === mid) {
+                            const data = schedules[key];
+                            if (data && data.subCat && data.subCat.trim() !== "") {
+                                uniqueSubCats.add(data.subCat.trim());
+                            }
+                        }
+                    }
+                });
+
+                // 1. 中分類のベース行をレンダリング
                 const row = document.createElement('tr');
                 if (isDone) row.className = 'row-done';
 
@@ -793,66 +811,107 @@
                 tdMid.addEventListener('click', () => openEditCategoryModal('mid', cat.main, mid));
                 row.appendChild(tdMid);
 
+                // 中分類ベース行の日付マス (小分類キーが空欄 "" のデータ)
                 for (let day = 1; day <= numDays; day++) {
                     const cell = document.createElement('td');
                     cell.className = 'cell-day';
                     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
                     const { exactKey, data } = findScheduleData(dateStr, cat.main, mid, "");
-
-                    if (data) {
-                        if (data.isNgDay) {
-                            cell.classList.add('has-event-member-ng');
-                            cell.innerText = "🚫不可";
-                        } else {
-                            if (cat.main === 'イベント') cell.classList.add('has-event-live');
-                            else if (cat.main === '楽曲制作') cell.classList.add('has-event-music');
-                            else if (cat.main === 'SNS') cell.classList.add('has-event-sns');
-                            else if (cat.main === '各メンバースケジュール') cell.classList.add('has-event-member');
-                            else cell.classList.add('has-event-default');
-
-                            // 【ルール指定に基づき修正】時間、場所、内容詳細を改行区切りで表示
-                            let displayParts = [];
-                            
-                            // 1. 時間 (h:mm～h:mm 表示)
-                            if (data.startTime) {
-                                let timeStr = data.startTime;
-                                if (data.endTime) {
-                                    timeStr += `～${data.endTime}`;
-                                }
-                                displayParts.push(timeStr);
-                            }
-                            
-                            // 2. 場所
-                            if (data.location) {
-                                displayParts.push(data.location);
-                            }
-                            
-                            // 3. 内容詳細
-                            if (data.content) {
-                                displayParts.push(data.content);
-                            } else if (!data.startTime && !data.location && data.subCat) {
-                                // 時間・場所も内容詳細もなく、小分類名のみある場合のフォールバック
-                                displayParts.push(data.subCat);
-                            }
-
-                            cell.innerText = displayParts.join("\n") || "●";
-                        }
-                    }
+                    renderCellTextAndStyle(cell, data, cat.main);
 
                     cell.addEventListener('click', () => {
                         activeCellInfo = { dateStr, mainCat: cat.main, midCat: mid, subCatKey: "" };
-                        if (data) {
-                            showScheduleDetail(data);
-                        } else {
-                            openEditScheduleModal(dateStr, cat.main, mid, "");
-                        }
+                        if (data) showScheduleDetail(data);
+                        else openEditScheduleModal(dateStr, cat.main, mid, "");
                     });
                     row.appendChild(cell);
                 }
                 tbody.appendChild(row);
+
+                // 2. 自動検出された小分類（子要素）の行を直下に展開レンダリング
+                uniqueSubCats.forEach(subCatName => {
+                    const subRow = document.createElement('tr');
+                    if (isDone) subRow.className = 'row-done';
+
+                    // チェックボックス列と大分類列は空欄
+                    const tdSubDone = document.createElement('td'); tdSubDone.className = 'col-fixed'; subRow.appendChild(tdSubDone);
+                    const tdSubM = document.createElement('td'); tdSubM.className = 'col-fixed'; subRow.appendChild(tdSubM);
+
+                    // 中分類名称エリアに「↳ 小分類名」を表示
+                    const tdSubLabel = document.createElement('td');
+                    tdSubLabel.className = 'col-sub col-fixed';
+                    tdSubLabel.innerText = `↳ ${subCatName}`;
+                    subRow.appendChild(tdSubLabel);
+
+                    // 小分類行の各日付マス
+                    for (let day = 1; day <= numDays; day++) {
+                        const cell = document.createElement('td');
+                        cell.className = 'cell-day';
+                        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+                        // 小分類の文字列自体をキーの識別子として扱う
+                        const { exactKey, data } = findScheduleData(dateStr, cat.main, mid, subCatName);
+                        renderCellTextAndStyle(cell, data, cat.main);
+
+                        cell.addEventListener('click', () => {
+                            activeCellInfo = { dateStr, mainCat: cat.main, midCat: mid, subCatKey: subCatName };
+                            if (data) showScheduleDetail(data);
+                            else {
+                                // 新規作成時、あらかじめ小分類名が入力された状態でフォームを開く
+                                openEditScheduleModal(dateStr, cat.main, mid, subCatName);
+                                document.getElementById('input-sub-cat-edit').value = subCatName;
+                            }
+                        });
+                        subRow.appendChild(cell);
+                    }
+                    tbody.appendChild(subRow);
+                });
             });
         });
+    }
+
+    // セル内のテキスト表記およびスタイル定義（共通化）
+    function renderCellTextAndStyle(cell, data, mainCat) {
+        if (!data) return;
+
+        if (data.isNgDay) {
+            cell.classList.add('has-event-member-ng');
+            cell.innerText = "🚫不可";
+        } else {
+            if (mainCat === 'イベント') cell.classList.add('has-event-live');
+            else if (mainCat === '楽曲制作') cell.classList.add('has-event-music');
+            else if (mainCat === 'SNS') cell.classList.add('has-event-sns');
+            else if (mainCat === '各メンバースケジュール') cell.classList.add('has-event-member');
+            else cell.classList.add('has-event-default');
+
+            // 表示ルール: 時間、場所、内容詳細を改行区切りで表示
+            let displayParts = [];
+            
+            // 1. 時間 (h:mm～h:mm 表示)
+            if (data.startTime) {
+                let timeStr = data.startTime;
+                if (data.endTime) {
+                    timeStr += `～${data.endTime}`;
+                }
+                displayParts.push(timeStr);
+            }
+            
+            // 2. 場所
+            if (data.location) {
+                displayParts.push(data.location);
+            }
+            
+            // 3. 内容詳細
+            if (data.content) {
+                displayParts.push(data.content);
+            } else if (!data.startTime && !data.location && data.subCat) {
+                // 時間・場所も内容詳細も未記入で、小分類名のみが存在する場合のフォールバック
+                displayParts.push(data.subCat);
+            }
+
+            cell.innerText = displayParts.join("\n") || "●";
+        }
     }
 
     function renderCalendarView(year, month) {
@@ -1331,12 +1390,15 @@
                 if(baseD) targetDates.push(baseD);
             }
             targetDates.forEach(dStr => {
-                const { exactKey } = findScheduleData(dStr, mainCat, midCat, subCatKey);
+                // 小分類(subCat)がある場合は、それをキー識別子として登録
+                const targetSubKey = subCat || subCatKey;
+                const { exactKey } = findScheduleData(dStr, mainCat, midCat, targetSubKey);
                 schedules[exactKey] = payload;
             });
         } else {
             const dStr = document.getElementById('input-date-edit').value || activeCellInfo.dateStr;
-            const { exactKey } = findScheduleData(dStr, mainCat, midCat, subCatKey);
+            const targetSubKey = subCat || subCatKey;
+            const { exactKey } = findScheduleData(dStr, mainCat, midCat, targetSubKey);
             schedules[exactKey] = payload;
         }
 
