@@ -34,6 +34,10 @@
             --bg-default-main: #718093; 
             --bg-default-cell: #f8f9fa;
             --text-default-cell: #2f3640;
+
+            /* NG日用のカラー定義を追加 */
+            --bg-ng-cell: #e2e8f0;
+            --text-ng-cell: #64748b;
         }
         * { box-sizing: border-box; }
         body {
@@ -188,6 +192,9 @@
         table.wbs-table td.cell-day.has-event-member { background: var(--bg-member-cell) !important; color: var(--text-member-cell); font-weight: bold; }
         table.wbs-table td.cell-day.has-event-default { background: var(--bg-default-cell) !important; color: var(--text-default-cell); font-weight: bold; }
 
+        /* NG日のグレーアウトスタイルを定義 */
+        table.wbs-table td.cell-day.has-event-ng { background: var(--bg-ng-cell) !important; color: var(--text-ng-cell) !important; font-weight: normal; }
+
         table.wbs-table tr.row-done td {
             background-color: #f1f2f6 !important;
             color: #a4b0be !important;
@@ -243,6 +250,7 @@
         .badge-sns { background-color: var(--bg-sns-main); }
         .badge-member { background-color: var(--bg-member-main); }
         .badge-default { background-color: var(--bg-default-main); }
+        .badge-ng { background-color: var(--text-ng-cell); } /* カレンダー用NGバッジ */
 
         .wbs-view-wrapper { display: none; }
         .calendar-view-wrapper { display: block; }
@@ -430,6 +438,14 @@
                 <label>対象の分類行</label>
                 <div id="edit-cat-path-label" style="font-weight: bold; color: #555;"></div>
             </div>
+
+            <div class="form-group hidden" id="group-ng-setting" style="background: #f1f5f9; padding: 10px; border-radius: 8px; border: 1px dashed #cbd5e1; margin-bottom: 12px;">
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #475569;">
+                    <input type="checkbox" id="chk-is-ng" style="width: auto; transform: scale(1.2);">
+                    ⚠️ この日を「NG日（稼働不可）」としてまとめて登録する
+                </label>
+            </div>
+
             <div class="form-group">
                 <label>小分類（項目名）</label>
                 <input type="text" id="input-sub-cat-edit" list="datalist-sub-cats" placeholder="例: 新宿LOFTワンマン、新曲Aレコーディング、NG枠など">
@@ -534,6 +550,16 @@
         
         document.getElementById('form-schedule-save').addEventListener('submit', handleScheduleSubmit);
         document.getElementById('btn-delete-schedule').addEventListener('click', handleScheduleDelete);
+
+        // NGチェック切り替え時に自動で入力欄を補填する挙動を追加
+        document.getElementById('chk-is-ng').addEventListener('change', (e) => {
+            const subCatInput = document.getElementById('input-sub-cat-edit');
+            const contentInput = document.getElementById('input-content');
+            if(e.target.checked) {
+                if(!subCatInput.value) subCatInput.value = "NG日";
+                if(!contentInput.value) contentInput.value = "終日稼働不可";
+            }
+        });
 
         document.getElementById('btn-multi-prev-month').addEventListener('click', () => {
             multiDatePickerSelectedMonth.month--;
@@ -751,16 +777,20 @@
                     const { exactKey, data } = findScheduleData(dateStr, cat.main, mid, "");
                     
                     if (data) {
-                        if (cat.main === 'イベント') cell.classList.add('has-event-live');
-                        else if (cat.main === '楽曲制作') cell.classList.add('has-event-music');
-                        else if (cat.main === 'SNS') cell.classList.add('has-event-sns');
-                        else if (cat.main === '各メンバースケジュール') cell.classList.add('has-event-member');
-                        else cell.classList.add('has-event-default');
+                        // ★ NG日フラグが有効な場合はグレーアウトクラスを最優先で割り当てる
+                        if (data.isNg) {
+                            cell.classList.add('has-event-ng');
+                        } else {
+                            if (cat.main === 'イベント') cell.classList.add('has-event-live');
+                            else if (cat.main === '楽曲制作') cell.classList.add('has-event-music');
+                            else if (cat.main === 'SNS') cell.classList.add('has-event-sns');
+                            else if (cat.main === '各メンバースケジュール') cell.classList.add('has-event-member');
+                            else cell.classList.add('has-event-default');
+                        }
                         
                         const timePrefix = data.startTime ? `${data.startTime}\n` : '';
                         cell.innerText = timePrefix + (data.content || '有');
                     }
-                    // ★ 各メンバースケジュールの場合は直接編集画面へ
                     cell.addEventListener('click', () => {
                         if (cat.main === '各メンバースケジュール') {
                             openDirectEditForm(dateStr, cat.main, mid, '');
@@ -808,16 +838,20 @@
                         const { data } = findScheduleData(dateStr, cat.main, mid, subCatName);
 
                         if (data) {
-                            if (cat.main === 'イベント') cell.classList.add('has-event-live');
-                            else if (cat.main === '楽曲制作') cell.classList.add('has-event-music');
-                            else if (cat.main === 'SNS') cell.classList.add('has-event-sns');
-                            else if (cat.main === '各メンバースケジュール') cell.classList.add('has-event-member');
-                            else cell.classList.add('has-event-default');
+                            // ★ 子要素行でもNGフラグチェックを反映
+                            if (data.isNg) {
+                                cell.classList.add('has-event-ng');
+                            } else {
+                                if (cat.main === 'イベント') cell.classList.add('has-event-live');
+                                else if (cat.main === '楽曲制作') cell.classList.add('has-event-music');
+                                else if (cat.main === 'SNS') cell.classList.add('has-event-sns');
+                                else if (cat.main === '各メンバースケジュール') cell.classList.add('has-event-member');
+                                else cell.classList.add('has-event-default');
+                            }
                             
                             const timePrefix = data.startTime ? `${data.startTime}\n` : '';
                             cell.innerText = timePrefix + (data.content || '有');
                         }
-                        // ★ 子要素の行でも、各メンバースケジュールの場合は直接編集画面へ
                         cell.addEventListener('click', () => {
                             if (cat.main === '各メンバースケジュール') {
                                 openDirectEditForm(dateStr, cat.main, mid, subCatName);
@@ -895,7 +929,11 @@
                 if (data) {
                     const badge = document.createElement('div');
                     badge.className = 'day-badge';
-                    if (mainCat === 'イベント') badge.classList.add('badge-event');
+                    
+                    // カレンダー用バッジスタイル分けにNG時を追加
+                    if (data.isNg) {
+                        badge.classList.add('badge-ng');
+                    } else if (mainCat === 'イベント') badge.classList.add('badge-event');
                     else if (mainCat === '楽曲制作') badge.classList.add('badge-music');
                     else if (mainCat === 'SNS') badge.classList.add('badge-sns');
                     else if (mainCat === '各メンバースケジュール') badge.classList.add('badge-member');
@@ -937,13 +975,13 @@
         const { exactKey, data } = findScheduleData(dateStr, mainCat, midCat, subCatKey);
         
         activeCellInfo = { dateStr, mainCat, midCat, subCatKey };
-        const activeData = data || { subCat: subCatKey, song: '', content: '', startTime: '', endTime: '' };
+        const activeData = data || { subCat: subCatKey, song: '', content: '', startTime: '', endTime: '', isNg: false };
 
         document.getElementById('view-date').innerText = dateStr.replace(/-/g, '/');
         const tStr = activeData.startTime ? `${activeData.startTime} ～ ${activeData.endTime || '未設定'}` : '終日予定';
         document.getElementById('view-time').innerText = tStr;
 
-        document.getElementById('view-category').innerText = `${mainCat} ＞ ${midCat}`;
+        document.getElementById('view-category').innerText = `${mainCat} ＞ ${midCat} ${activeData.isNg ? '(NG日)' : ''}`;
         document.getElementById('view-sub-cat').innerText = activeData.subCat || '未設定（空欄）';
         document.getElementById('view-song').innerText = activeData.song || '記載なし';
         document.getElementById('view-content').innerText = activeData.content || '記載なし';
@@ -977,7 +1015,8 @@
                     div.className = 'day-schedule-item';
 
                     let tagClass = 'badge-default';
-                    if (main === 'イベント') tagClass = 'badge-event';
+                    if (data.isNg) tagClass = 'badge-ng';
+                    else if (main === 'イベント') tagClass = 'badge-event';
                     else if (main === '楽曲制作') tagClass = 'badge-music';
                     else if (main === 'SNS') tagClass = 'badge-sns';
                     else if (main === '各メンバースケジュール') tagClass = 'badge-member';
@@ -986,7 +1025,7 @@
                     const displaySubCat = data.subCat || subKey || '未設定';
 
                     div.innerHTML = `
-                        <span class="item-category-tag ${tagClass}">${main} ＞ ${mid}</span>
+                        <span class="item-category-tag ${tagClass}">${main} ＞ ${mid} ${data.isNg ? '[NG日]' : ''}</span>
                         <div class="item-title">📍 小分類: ${displaySubCat}</div>
                         <div style="font-size:0.78rem; color:#d35400; font-weight:bold; margin-bottom: 4px;">${timeDisplay}</div>
                         <div style="font-size:0.75rem; color:#555;">
@@ -1052,6 +1091,10 @@
         document.getElementById('chk-multi-date').checked = false;
         document.getElementById('area-multi-date-picker').classList.add('hidden');
 
+        // NGチェックボックスのリセット
+        document.getElementById('chk-is-ng').checked = false;
+        document.getElementById('group-ng-setting').classList.add('hidden');
+
         setupSubCatDatalist('', '');
         setupSongDatalist();
 
@@ -1071,11 +1114,23 @@
         catSelect.onchange = function() {
             const parts = this.value.split('___');
             setupSubCatDatalist(parts[0], parts[1]);
+            
+            // ドロップダウン切り替え時にもNG表示を制御
+            if (parts[0] === '各メンバースケジュール') {
+                document.getElementById('group-ng-setting').classList.remove('hidden');
+            } else {
+                document.getElementById('group-ng-setting').classList.add('hidden');
+                document.getElementById('chk-is-ng').checked = false;
+            }
+
             if (document.getElementById('chk-multi-date').checked) generateMultiDateGrid();
         };
         if(catSelect.value) {
             const parts = catSelect.value.split('___');
             setupSubCatDatalist(parts[0], parts[1]);
+            if (parts[0] === '各メンバースケジュール') {
+                document.getElementById('group-ng-setting').classList.remove('hidden');
+            }
         }
     }
 
@@ -1083,7 +1138,7 @@
         const { data } = findScheduleData(dateStr, mainCat, midCat, subCatKey);
 
         activeCellInfo = { dateStr, mainCat, midCat, subCatKey };
-        const activeData = data || { subCat: subCatKey, song: '', content: '', startTime: '', endTime: '' };
+        const activeData = data || { subCat: subCatKey, song: '', content: '', startTime: '', endTime: '', isNg: false };
 
         document.getElementById('input-date-edit').value = dateStr;
         document.getElementById('input-start-time').value = activeData.startTime || '';
@@ -1095,6 +1150,15 @@
         document.getElementById('edit-cat-path-label').innerText = `${mainCat} ＞ ${midCat}`;
         document.getElementById('group-edit-cat-select').classList.add('hidden');
         document.getElementById('group-edit-cat-label').classList.remove('hidden');
+
+        // ★ 大分類が「各メンバースケジュール」の場合のみ、NG日設定を表示する
+        if (mainCat === '各メンバースケジュール') {
+            document.getElementById('group-ng-setting').classList.remove('hidden');
+            document.getElementById('chk-is-ng').checked = !!activeData.isNg;
+        } else {
+            document.getElementById('group-ng-setting').classList.add('hidden');
+            document.getElementById('chk-is-ng').checked = false;
+        }
 
         document.getElementById('input-sub-cat-edit').value = activeData.subCat || '';
         
@@ -1261,6 +1325,9 @@
         const content = document.getElementById('input-content').value.trim();
         const startTime = document.getElementById('input-start-time').value;
         const endTime = document.getElementById('input-end-time').value;
+        
+        // ★ NGフラグの取得
+        const isNg = mainCat === '各メンバースケジュール' && document.getElementById('chk-is-ng').checked;
 
         const finalDateStr = document.getElementById('input-date-edit').value || dateStr;
         const isMultiDate = document.getElementById('chk-multi-date').checked;
@@ -1273,12 +1340,12 @@
 
         const { exactKey } = findScheduleData(dateStr, mainCat, midCat, subCatKey);
 
-        if (subCat || song || content || startTime) {
+        if (subCat || song || content || startTime || isNg) {
             delete schedules[exactKey];
 
             targetDates.forEach(dStr => {
                 const newKey = `${dStr}_${mainCat}_${midCat}_${subCat}`;
-                schedules[newKey] = { subCat, song, content, startTime, endTime };
+                schedules[newKey] = { subCat, song, content, startTime, endTime, isNg }; // オブジェクトデータにisNgを追加
             });
 
             if (finalDateStr !== dateStr) {
