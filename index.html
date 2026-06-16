@@ -48,7 +48,7 @@
             padding: 15px 20px;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.03);
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
         h1 { font-size: 1.2rem; margin: 0; font-weight: bold; }
         
@@ -71,6 +71,9 @@
         .btn-sub { background-color: #ffffff; color: #2f3640; }
         .btn-sub:hover { background-color: #f5f6fa; }
         .btn-danger { background-color: #e74c3c; color: white; border: none; }
+        
+        .btn-ical { background-color: #1a73e8; color: white; border: none; font-size: 0.8rem; padding: 6px 12px; border-radius: 20px;}
+        .btn-ical:hover { background-color: #1557b0; }
 
         .sync-status-bar {
             font-size: 0.85rem;
@@ -79,10 +82,24 @@
             background: #e8f5e9;
             padding: 8px 15px;
             border-radius: 8px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             display: inline-block;
             width: 100%;
             text-align: center;
+        }
+
+        .calendar-sync-banner {
+            background: #e8f0fe;
+            border: 1px solid #aecbfa;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .month-selector {
@@ -120,14 +137,13 @@
             border-bottom: 1px solid var(--border-color);
             padding: 10px 4px; 
             text-align: center;
-            height: 38px;
+            height: 42px;
         }
         table.wbs-table {
             border-left: 1px solid var(--border-color);
             border-top: 1px solid var(--border-color);
         }
 
-        /* 表頭（日付行）固定 */
         table.wbs-table thead th {
             position: sticky;
             top: -21px; 
@@ -136,9 +152,7 @@
             color: #57606f;
             z-index: 20;
         }
-        table.wbs-table thead th.col-fixed-head {
-            z-index: 30;
-        }
+        table.wbs-table thead th.col-fixed-head { z-index: 30; }
 
         table.wbs-table .col-done { width: 45px; }
         table.wbs-table .col-main { width: 100px; text-align: left; font-weight: bold; }
@@ -155,8 +169,8 @@
         table.wbs-table tr.category-default td { background-color: var(--bg-default-main); }
 
         table.wbs-table td.cell-day {
-            cursor: pointer; transition: all 0.15s ease-in-out; font-size: 0.75rem;
-            white-space: pre-wrap; word-break: break-all; max-width: 45px; background: #ffffff; position: relative;
+            cursor: pointer; transition: all 0.15s ease-in-out; font-size: 0.72rem;
+            white-space: pre-wrap; word-break: break-all; max-width: 50px; background: #ffffff; position: relative;
         }
         table.wbs-table td.cell-day:hover { 
             background: #fffdf0 !important; box-shadow: 0 0 10px rgba(0, 0, 0, 0.25); 
@@ -202,7 +216,7 @@
         .weekday-label:nth-child(1) { color: var(--sunday-color); }
 
         .calendar-day {
-            min-height: 70px; background: #fff; padding: 4px;
+            min-height: 80px; background: #fff; padding: 4px;
             border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);
             position: relative; cursor: pointer;
         }
@@ -214,7 +228,7 @@
 
         .event-badges-container { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
         .day-badge {
-            font-size: 0.6rem; color: white; padding: 1px 2px; border-radius: 2px;
+            font-size: 0.58rem; color: white; padding: 1px 2px; border-radius: 2px;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: bold;
         }
         .badge-event { background-color: var(--bg-event-main); }
@@ -222,7 +236,6 @@
         .badge-sns { background-color: var(--bg-sns-main); }
         .badge-default { background-color: var(--bg-default-main); }
 
-        /* レスポンシブ切り替え */
         .wbs-view-wrapper { display: none; }
         .calendar-view-wrapper { display: block; }
 
@@ -245,6 +258,11 @@
         .form-group { margin-bottom: 12px; }
         .form-group label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 4px; color: #57606f; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px; border: 1px solid #ced6e0; border-radius: 6px; font-size: 0.9rem; }
+        
+        /* 時間入力の並び用 */
+        .time-range-group { display: flex; align-items: center; gap: 8px; }
+        .time-range-group input { flex: 1; }
+
         .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
         .info-value { background: #f8f9fa; padding: 8px; border-radius: 6px; border: 1px solid #e4e7eb; min-height: 1.2rem; white-space: pre-wrap; font-size: 0.9rem;}
         
@@ -257,41 +275,11 @@
 
         .song-inputs-container { display: flex; flex-direction: column; gap: 6px; }
 
-        /* 複数一括日付選択用のミニカレンダーグリッド */
-        .multi-date-selector {
-            background: #f5f6fa;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 10px;
-            margin-top: 6px;
-        }
-        .multi-date-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-            margin-top: 6px;
-        }
-        .multi-date-item {
-            background: white;
-            border: 1px solid #ced6e0;
-            border-radius: 4px;
-            padding: 4px;
-            text-align: center;
-            font-size: 0.8rem;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .multi-date-item input {
-            margin: 2px 0 0 0;
-            cursor: pointer;
-            width: auto;
-        }
-        .multi-date-item:hover {
-            background: #e1f5fe;
-        }
+        .multi-date-selector { background: #f5f6fa; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; margin-top: 6px; }
+        .multi-date-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 6px; }
+        .multi-date-item { background: white; border: 1px solid #ced6e0; border-radius: 4px; padding: 4px; text-align: center; font-size: 0.8rem; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .multi-date-item input { margin: 2px 0 0 0; cursor: pointer; width: auto; }
+        .multi-date-item:hover { background: #e1f5fe; }
     </style>
 </head>
 <body>
@@ -306,6 +294,14 @@
     </header>
 
     <div id="sync-status" class="sync-status-bar">🔄 スプレッドシートからデータを読み込み中...</div>
+
+    <div class="calendar-sync-banner">
+        <div>
+            <strong>💡 スマホの標準カレンダーアプリに自動同期できます</strong><br>
+            <span style="font-size:0.75rem; color:#555;">右のボタンからカレンダーを「購読登録」すると、ここで書き換えた予定がスマホにリアルタイム反映されます。</span>
+        </div>
+        <button id="btn-sync-ical" class="btn-ical">📱 スマホカレンダーと同期</button>
+    </div>
 
     <div class="month-selector">
         <button id="btn-prev-month" class="btn-sub">◀ 前月</button>
@@ -371,6 +367,7 @@
     <div class="modal-card">
         <h2>予定の詳細</h2>
         <div class="form-group"><label>日付</label><div id="view-date" class="info-value"></div></div>
+        <div class="form-group"><label>時間</label><div id="view-time" class="info-value"></div></div>
         <div class="form-group"><label>分類</label><div id="view-category" class="info-value"></div></div>
         <div class="form-group"><label>小分類（項目名）</label><div id="view-sub-cat" class="info-value"></div></div>
         <div class="form-group"><label>場所</label><div id="view-location" class="info-value"></div></div>
@@ -399,8 +396,17 @@
         <h2>スケジュールの入力・編集</h2>
         <form id="form-schedule-save">
             <div class="form-group" id="group-edit-date">
-                <label>日付（変更する場合は打ち直してください）</label>
+                <label>日付</label>
                 <input type="date" id="input-date-edit">
+            </div>
+
+            <div class="form-group">
+                <label>時間（空欄の場合は終日扱い）</label>
+                <div class="time-range-group">
+                    <input type="time" id="input-start-time">
+                    <span>～</span>
+                    <input type="time" id="input-end-time">
+                </div>
             </div>
             
             <div class="form-group hidden" id="group-edit-cat-select">
@@ -413,12 +419,12 @@
             </div>
             <div class="form-group">
                 <label>小分類（項目名）</label>
-                <input type="text" id="input-sub-cat-edit" list="datalist-sub-cats" placeholder="例: 主にスタジオ分類で記載【未記載でもＯＫ】">
+                <input type="text" id="input-sub-cat-edit" list="datalist-sub-cats" placeholder="例: 新宿LOFTワンマン、新曲Aレコーディングなど">
                 <datalist id="datalist-sub-cats"></datalist>
             </div>
             <div class="form-group">
                 <label>場所</label>
-                <input type="text" id="input-location" list="datalist-locations" placeholder="例: fine天神Eスタ/ゴンスタAなど">
+                <input type="text" id="input-location" list="datalist-locations" placeholder="例: 吉祥寺WARP、スタジオペンタなど">
                 <datalist id="datalist-locations"></datalist>
             </div>
             
@@ -527,6 +533,25 @@
         document.getElementById('btn-delete-cat').addEventListener('click', handleCategoryDelete);
 
         document.getElementById('btn-cloud-load').addEventListener('click', loadFromSpreadsheet);
+
+        // 📱 カレンダー自動同期（購読用リンク生成）の挙動設定
+        document.getElementById('btn-sync-ical').addEventListener('click', () => {
+            const webcalUrl = GAS_API_URL.replace(/^https:/, "webcal:") + "?type=ics";
+            
+            // iPhone/iPad (iOS) or Mac の場合は webcal プロトコルで直接カレンダーアプリを開く
+            if (/iPhone|iPad|iPod|Macintosh/i.test(navigator.userAgent)) {
+                window.location.href = webcalUrl;
+            } else {
+                // Android や Windows Googleカレンダーの場合は、URLをコピーさせてGoogleカレンダーの「URLで追加」に案内する
+                const httpsUrl = GAS_API_URL + "?type=ics";
+                navigator.clipboard.writeText(httpsUrl).then(() => {
+                    alert("カレンダーの同期URLをコピーしました！\n\n【Android/Googleカレンダーをお使いの方】\nPC版Googleカレンダーの「他のカレンダー ＞ ＋ ＞ URLから追加」にこのURLを貼り付けるとスマホと自動同期されます。");
+                    window.open("https://calendar.google.com/", "_blank");
+                }).catch(() => {
+                    prompt("コピーに失敗しました。以下のURLをコピーしてGoogleカレンダーの「URLから追加」等に設定してください：", httpsUrl);
+                });
+            }
+        });
 
         window.addEventListener('resize', renderAllViews);
     });
@@ -675,6 +700,7 @@
                 
                 row.appendChild(tdMainPlaceholder); row.appendChild(tdMid);
 
+                // 小分類なし（ベース行）
                 for (let d = 1; d <= numDays; d++) {
                     const cell = document.createElement('td');
                     cell.className = 'cell-day';
@@ -687,13 +713,17 @@
                         else if (cat.main === 'SNS') cell.classList.add('has-event-sns');
                         else cell.classList.add('has-event-default');
                         
-                        cell.innerText = schedules[scheduleKey].location || schedules[scheduleKey].content || '有';
+                        // 表セルに時間を少し混ぜて表示
+                        const item = schedules[scheduleKey];
+                        const timePrefix = item.startTime ? `${item.startTime}\n` : '';
+                        cell.innerText = timePrefix + (item.location || item.content || '有');
                     }
                     cell.addEventListener('click', () => openWBSDetailModal(dateStr, cat.main, mid, ''));
                     row.appendChild(cell);
                 }
                 tbody.appendChild(row);
 
+                // 子行を展開して描画
                 uniqueSubCats.forEach(subCatName => {
                     const subRow = document.createElement('tr');
                     const subRowKey = `${cat.main}_${mid}_${subCatName}`;
@@ -734,7 +764,9 @@
                             else if (cat.main === 'SNS') cell.classList.add('has-event-sns');
                             else cell.classList.add('has-event-default');
                             
-                            cell.innerText = schedules[scheduleKey].location || schedules[scheduleKey].content || '有';
+                            const item = schedules[scheduleKey];
+                            const timePrefix = item.startTime ? `${item.startTime}\n` : '';
+                            cell.innerText = timePrefix + (item.location || item.content || '有');
                         }
                         cell.addEventListener('click', () => openWBSDetailModal(dateStr, cat.main, mid, subCatName));
                         subRow.appendChild(cell);
@@ -815,7 +847,9 @@
                     else if (mainCat === 'SNS') badge.classList.add('badge-sns');
                     else badge.classList.add('badge-default');
                     
-                    badge.innerText = `${midCat}:${data.subCat || data.location || '予定'}`;
+                    // 時間がある場合はバッジにも表示
+                    const timeStr = data.startTime ? `[${data.startTime}] ` : '';
+                    badge.innerText = `${timeStr}${midCat}:${data.subCat || data.location || '予定'}`;
                     badgesContainer.appendChild(badge);
                 }
             }
@@ -850,14 +884,19 @@
     function openWBSDetailModal(dateStr, mainCat, midCat, subCatKey) {
         activeCellInfo = { dateStr, mainCat, midCat, subCatKey };
         const scheduleKey = `${dateStr}_${mainCat}_${midCat}_${subCatKey}`;
-        const data = schedules[scheduleKey] || { subCat: subCatKey, location: '', song: '', content: '' };
+        const data = schedules[scheduleKey] || { subCat: subCatKey, location: '', song: '', content: '', startTime: '', endTime: '' };
 
         document.getElementById('view-date').innerText = dateStr.replace(/-/g, '/');
+        
+        // 閲覧用時間のセット
+        const tStr = data.startTime ? `${data.startTime} ～ ${data.endTime || '未設定'}` : '終日予定';
+        document.getElementById('view-time').innerText = tStr;
+
         document.getElementById('view-category').innerText = `${mainCat} ＞ ${midCat}`;
-        document.getElementById('view-sub-cat').innerText = data.subCat || '';
-        document.getElementById('view-location').innerText = data.location || '';
-        document.getElementById('view-song').innerText = data.song || '';
-        document.getElementById('view-content').innerText = data.content || '';
+        document.getElementById('view-sub-cat').innerText = data.subCat || '未設定（空欄）';
+        document.getElementById('view-location').innerText = data.location || '記載なし';
+        document.getElementById('view-song').innerText = data.song || '記載なし';
+        document.getElementById('view-content').innerText = data.content || '記載なし';
         document.getElementById('modal-detail').classList.remove('hidden');
     }
 
@@ -866,7 +905,7 @@
         openDirectEditForm(activeCellInfo.dateStr, activeCellInfo.mainCat, activeCellInfo.midCat, activeCellInfo.subCatKey);
     }
 
-    // --- カレンダー：日付タップ時のスリムポップアップ ---
+    // --- カレンダー：日付タップ時のポップアップ ---
     function openCalendarDayModal(dateStr) {
         activeCellInfo.dateStr = dateStr;
         document.getElementById('modal-day-label').innerText = `${dateStr.replace(/-/g, '/')} の予定`;
@@ -883,7 +922,7 @@
                 const subKey = parts.slice(3).join('_');
                 const data = schedules[key];
                 
-                if (data && (data.subCat || data.location || data.song || data.content)) {
+                if (data && (data.subCat || data.location || data.song || data.content || data.startTime)) {
                     hasAnySchedule = true;
                     const div = document.createElement('div');
                     div.className = 'day-schedule-item';
@@ -893,9 +932,12 @@
                     else if (main === '楽曲制作') tagClass = 'badge-music';
                     else if (main === 'SNS') tagClass = 'badge-sns';
 
+                    const timeDisplay = data.startTime ? `⏰ 時間: ${data.startTime}～${data.endTime || ''}` : '⏰ 終日';
+
                     div.innerHTML = `
                         <span class="item-category-tag ${tagClass}">${main} ＞ ${mid}</span>
-                        <div class="item-title">📍 小分類: ${data.subCat || '-'}</div>
+                        <div class="item-title">📍 小分類: ${data.subCat || '未設定'}</div>
+                        <div style="font-size:0.78rem; color:#d35400; font-weight:bold; margin-bottom: 4px;">${timeDisplay}</div>
                         <div style="font-size:0.75rem; color:#555;">
                             ${data.location ? `🏠 場所: ${data.location}` : ''} 
                             ${data.song ? ` 🎵 楽曲: ${data.song}` : ''}
@@ -926,7 +968,6 @@
         openDirectEditForm(dateStr, main, mid, subKey);
     };
 
-    // カレンダー詳細画面の「＋ 予定を追加する」ボタンが押された時
     function handleAddAnyScheduleClick() {
         const dateStr = activeCellInfo.dateStr;
         document.getElementById('modal-day-detail').classList.add('hidden');
@@ -943,6 +984,8 @@
         });
 
         document.getElementById('input-date-edit').value = dateStr;
+        document.getElementById('input-start-time').value = '';
+        document.getElementById('input-end-time').value = '';
         document.getElementById('group-edit-cat-select').classList.remove('hidden');
         document.getElementById('group-edit-cat-label').classList.add('hidden');
 
@@ -950,11 +993,9 @@
         document.getElementById('input-location').value = '';
         
         setSongInputs([]);
-        
         document.getElementById('input-content').value = '';
         document.getElementById('btn-delete-schedule').classList.add('hidden');
         
-        // 一括日付の初期化
         document.getElementById('chk-multi-date').checked = false;
         document.getElementById('area-multi-date-picker').classList.add('hidden');
 
@@ -967,9 +1008,7 @@
         catSelect.onchange = function() {
             const parts = this.value.split('___');
             setupSubCatDatalist(parts[0], parts[1]);
-            if (document.getElementById('chk-multi-date').checked) {
-                generateMultiDateGrid(); // 分類切り替え時にも一括選択リストを維持
-            }
+            if (document.getElementById('chk-multi-date').checked) generateMultiDateGrid();
         };
         if(catSelect.value) {
             const parts = catSelect.value.split('___');
@@ -977,16 +1016,19 @@
         }
     }
 
-    // --- スケジュール編集フォームの展開 ---
+    // --- 編集フォーム展開 ---
     function openDirectEditForm(dateStr, mainCat, midCat, subCatKey) {
         activeCellInfo = { dateStr, mainCat, midCat, subCatKey };
         const scheduleKey = `${dateStr}_${mainCat}_${midCat}_${subCatKey}`;
-        const data = schedules[scheduleKey] || { subCat: subCatKey, location: '', song: '', content: '' };
+        const data = schedules[scheduleKey] || { subCat: subCatKey, location: '', song: '', content: '', startTime: '', endTime: '' };
 
-        // 📌 日付入力欄に現在の予定の日付を初期セット（ここから自由に変更可能）
         document.getElementById('input-date-edit').value = dateStr;
-        document.getElementById('edit-cat-path-label').innerText = `${mainCat} ＞ ${midCat}`;
         
+        // ⏰ 既存の時間データをフォームに読み込み
+        document.getElementById('input-start-time').value = data.startTime || '';
+        document.getElementById('input-end-time').value = data.endTime || '';
+
+        document.getElementById('edit-cat-path-label').innerText = `${mainCat} ＞ ${midCat}`;
         document.getElementById('group-edit-cat-select').classList.add('hidden');
         document.getElementById('group-edit-cat-label').classList.remove('hidden');
 
@@ -1002,29 +1044,23 @@
         document.getElementById('input-content').value = data.content || '';
         document.getElementById('btn-delete-schedule').classList.remove('hidden');
 
-        // 一括日付エリアの初期化（常に選べる状態をキープ）
         document.getElementById('chk-multi-date').checked = false;
         document.getElementById('area-multi-date-picker').classList.add('hidden');
 
         setupSubCatDatalist(mainCat, midCat);
         setupLocationAndSongDatalist();
 
-        // 📌 日付が変更されたら一括登録用のミニカレンダーも動的に再計算するイベントを設定
         document.getElementById('input-date-edit').onchange = function() {
-            if (document.getElementById('chk-multi-date').checked) {
-                generateMultiDateGrid();
-            }
+            if (document.getElementById('chk-multi-date').checked) generateMultiDateGrid();
         };
 
         document.getElementById('modal-edit-schedule').classList.remove('hidden');
     }
 
-    // 📅 一括登録用：その月の日付チェックボックスリストを動的生成
     function generateMultiDateGrid() {
         const container = document.getElementById('multi-date-grid-container');
         container.innerHTML = '';
 
-        // 入力されている現在の日付を取得（なければ元の選択日）
         const currentDateValue = document.getElementById('input-date-edit').value || activeCellInfo.dateStr;
         if (!currentDateValue) return;
 
@@ -1037,11 +1073,9 @@
 
         for (let d = 1; d <= totalDays; d++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-            
             const label = document.createElement('label');
             label.className = 'multi-date-item';
             
-            // 現在指定されているメインの日付はグレーアウトしてチェック固定
             if (d === baseDay) {
                 label.style.background = '#e0e0e0';
                 label.style.cursor = 'not-allowed';
@@ -1065,9 +1099,7 @@
             const parts = key.split('_');
             if (parts[1] === mainCat && parts[2] === midCat) {
                 const data = schedules[key];
-                if (data && data.subCat) {
-                    subCatSet.add(data.subCat);
-                }
+                if (data && data.subCat) subCatSet.add(data.subCat);
             }
         });
 
@@ -1081,7 +1113,6 @@
     function setupLocationAndSongDatalist() {
         const locationDatalist = document.getElementById('datalist-locations');
         const songDatalist = document.getElementById('datalist-songs');
-        
         locationDatalist.innerHTML = '';
         songDatalist.innerHTML = '';
 
@@ -1099,27 +1130,15 @@
             }
         });
 
-        locationSet.forEach(loc => {
-            const opt = document.createElement('option');
-            opt.value = loc;
-            locationDatalist.appendChild(opt);
-        });
-
-        songSet.forEach(song => {
-            const opt = document.createElement('option');
-            opt.value = song;
-            songDatalist.appendChild(opt);
-        });
+        locationSet.forEach(loc => { const opt = document.createElement('option'); opt.value = loc; locationDatalist.appendChild(opt); });
+        songSet.forEach(song => { const opt = document.createElement('option'); opt.value = song; songDatalist.appendChild(opt); });
     }
 
     function setSongInputs(songArray) {
         const wrapper = document.getElementById('song-inputs-wrapper');
         wrapper.innerHTML = '';
-
         const count = songArray.length > 0 ? songArray.length : 1;
-        for (let i = 0; i < count; i++) {
-            createSongInputElement(songArray[i] || '');
-        }
+        for (let i = 0; i < count; i++) createSongInputElement(songArray[i] || '');
         createSongInputElement('');
     }
 
@@ -1135,26 +1154,21 @@
         input.addEventListener('input', () => {
             const allInputs = wrapper.querySelectorAll('.input-song-item');
             const lastInput = allInputs[allInputs.length - 1];
-            if (lastInput.value.trim() !== '') {
-                createSongInputElement('');
-            }
+            if (lastInput.value.trim() !== '') createSongInputElement('');
         });
-
         wrapper.appendChild(input);
     }
 
-    // --- 予定データの保存 ---
+    // --- 保存処理 ---
     function handleScheduleSubmit(e) {
         e.preventDefault();
         let { dateStr, mainCat, midCat, subCatKey } = activeCellInfo;
         
-        // 分類セレクトボックスが表示されている（新規追加の）場合
         if (!document.getElementById('group-edit-cat-select').classList.contains('hidden')) {
             const selectVal = document.getElementById('select-target-cat-path').value;
             if(!selectVal) return;
             const parts = selectVal.split('___');
-            mainCat = parts[0];
-            midCat = parts[1];
+            mainCat = parts[0]; midCat = parts[1];
         }
 
         const subCat = document.getElementById('input-sub-cat-edit').value.trim();
@@ -1162,55 +1176,45 @@
         
         const songInputs = document.querySelectorAll('.input-song-item');
         const songVals = [];
-        songInputs.forEach(inp => {
-            const val = inp.value.trim();
-            if(val) songVals.push(val);
-        });
+        songInputs.forEach(inp => { const val = inp.value.trim(); if(val) songVals.push(val); });
         const song = songVals.join(', ');
+        
         const content = document.getElementById('input-content').value.trim();
 
-        // 📌 入力された新しい日付（移動先）を取得
+        // ⏰ 開始時間・終了時間の入力値を取得
+        const startTime = document.getElementById('input-start-time').value;
+        const endTime = document.getElementById('input-end-time').value;
+
         const finalDateStr = document.getElementById('input-date-edit').value || dateStr;
 
-        // 一括登録のチェック判別
         const isMultiDate = document.getElementById('chk-multi-date').checked;
         let targetDates = [finalDateStr];
 
         if (isMultiDate) {
             const checkedBoxes = document.querySelectorAll('.cb-target-multidate:checked');
-            // チェックされた全ての日付を配列にする（メインで入力された日も含みます）
             const boxesDates = Array.from(checkedBoxes).map(cb => cb.value);
-            if (!boxesDates.includes(finalDateStr)) {
-                boxesDates.push(finalDateStr);
-            }
+            if (!boxesDates.includes(finalDateStr)) boxesDates.push(finalDateStr);
             targetDates = boxesDates;
         }
 
-        // 既存データの古いキー
         const oldKey = `${dateStr}_${mainCat}_${midCat}_${subCatKey}`;
 
-        if (subCat || location || song || content) {
-            
-            // 📌 日付が元の選択から変わった、または小分類名が打ち直された場合、
-            // 一括登録でない（通常の移動・更新の）ときは古いマスからデータを消去する
+        // ⏰ startTime, endTime もオブジェクトに含めて保存
+        if (subCat || location || song || content || startTime) {
             if (oldKey !== `${finalDateStr}_${mainCat}_${midCat}_${subCat}`) {
                 delete schedules[oldKey];
             }
 
-            // ターゲットとなる日付すべてに書き込み
             targetDates.forEach(dStr => {
                 const newKey = `${dStr}_${mainCat}_${midCat}_${subCat}`;
-                schedules[newKey] = { subCat, location, song, content };
+                schedules[newKey] = { subCat, location, song, content, startTime, endTime };
             });
 
-            // 日付移動（変更）をした際、カレンダーの表示月が移動先とズレていたら自動でその月に合わせる
             if (finalDateStr !== dateStr) {
                 const parts = finalDateStr.split('-');
                 currentDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
             }
-
         } else {
-            // すべて空欄にされた場合は削除
             delete schedules[oldKey];
             if (isMultiDate) {
                 targetDates.forEach(dStr => {
@@ -1236,7 +1240,6 @@
         document.getElementById('modal-edit-schedule').classList.add('hidden');
     }
 
-    // --- WBS：分類名変更・行削除処理 ---
     function openCategoryEditModal(type, main, mid = '') {
         activeCatEditInfo = { type, main, mid };
         const label = document.getElementById('label-edit-cat-type');
