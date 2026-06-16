@@ -392,6 +392,7 @@
         <div class="form-group"><label>時間</label><div id="view-time" class="info-value"></div></div>
         <div class="form-group"><label>分類</label><div id="view-category" class="info-value"></div></div>
         <div class="form-group"><label>小分類（項目名）</label><div id="view-sub-cat" class="info-value"></div></div>
+        <div class="form-group"><label>場所</label><div id="view-location" class="info-value"></div></div>
         <div class="form-group"><label>楽曲</label><div id="view-song" class="info-value"></div></div>
         <div class="form-group"><label>内容詳細</label><div id="view-content" class="info-value"></div></div>
         <div class="modal-actions">
@@ -450,6 +451,11 @@
                 <label>小分類（項目名）</label>
                 <input type="text" id="input-sub-cat-edit" list="datalist-sub-cats" placeholder="例: 新宿LOFTワンマン、個人練習、ミーティングなど">
                 <datalist id="datalist-sub-cats"></datalist>
+            </div>
+
+            <div class="form-group">
+                <label>場所</label>
+                <input type="text" id="input-location-edit" placeholder="例: 新宿LOFT、スタジオノア、会議室Aなど">
             </div>
             
             <div class="form-group">
@@ -768,7 +774,6 @@
                     
                     if (data) {
                         if (data.isNgDay) {
-                            // NG日（終日不可）チェックボックスがONの場合は最優先でグレーアウト表示
                             cell.classList.add('has-event-member-ng');
                             cell.innerText = "終日不可";
                         } else {
@@ -790,7 +795,6 @@
                 }
                 tbody.appendChild(row);
 
-                // 小分類（子要素行）を生成（すべての分類で有効）
                 uniqueSubCats.forEach(subCatName => {
                     const subRow = document.createElement('tr');
                     const subRowKey = `${cat.main}_${mid}_${subCatName}`;
@@ -918,7 +922,8 @@
                     
                     const timeStr = data.startTime ? `[${data.startTime}] ` : '';
                     const subNameText = data.isNgDay ? '終日不可' : (data.subCat || (parts.slice(3).join('_')) || '予定あり');
-                    badge.innerText = `${timeStr}${midCat}:${subNameText}`;
+                    const locStr = data.location ? ` @${data.location}` : '';
+                    badge.innerText = `${timeStr}${midCat}:${subNameText}${locStr}`;
                     badgesContainer.appendChild(badge);
                 }
             }
@@ -952,7 +957,7 @@
         const { exactKey, data } = findScheduleData(dateStr, mainCat, midCat, subCatKey);
         
         activeCellInfo = { dateStr, mainCat, midCat, subCatKey };
-        const activeData = data || { subCat: subCatKey, song: '', content: '', startTime: '', endTime: '', isNgDay: false };
+        const activeData = data || { subCat: subCatKey, location: '', song: '', content: '', startTime: '', endTime: '', isNgDay: false };
 
         document.getElementById('view-date').innerText = dateStr.replace(/-/g, '/');
         const tStr = activeData.isNgDay ? '終日不可（NG日）' : (activeData.startTime ? `${activeData.startTime} ～ ${activeData.endTime || '未設定'}` : '終日予定');
@@ -960,6 +965,7 @@
 
         document.getElementById('view-category').innerText = `${mainCat} ＞ ${midCat}`;
         document.getElementById('view-sub-cat').innerText = activeData.isNgDay ? 'NG枠（終日不可）' : (activeData.subCat || '未設定（空欄）');
+        document.getElementById('view-location').innerText = activeData.location || '記載なし';
         document.getElementById('view-song').innerText = activeData.song || '記載なし';
         document.getElementById('view-content').innerText = activeData.content || '記載なし';
         document.getElementById('modal-detail').classList.remove('hidden');
@@ -1005,6 +1011,7 @@
                         <div class="item-title">📍 小分類: ${displaySubCat}</div>
                         <div style="font-size:0.78rem; color:#d35400; font-weight:bold; margin-bottom: 4px;">${timeDisplay}</div>
                         <div style="font-size:0.75rem; color:#555;">
+                            ${data.location ? ` 🏢 場所: ${data.location}<br>` : ''}
                             ${data.song ? ` 🎵 楽曲: ${data.song}` : ''}
                         </div>
                         ${data.content ? `<div style="font-size:0.75rem; margin-top:6px; color:#333; background:#fff; padding:6px; border-radius:4px; border:1px solid #e0e0e0; white-space:pre-wrap;">${data.content}</div>` : ''}
@@ -1059,6 +1066,7 @@
         document.getElementById('group-edit-cat-label').classList.add('hidden');
 
         document.getElementById('input-sub-cat-edit').value = '';
+        document.getElementById('input-location-edit').value = '';
         document.getElementById('chk-is-ng-day').checked = false;
         
         setSongInputs([]);
@@ -1099,7 +1107,7 @@
         const { data } = findScheduleData(dateStr, mainCat, midCat, subCatKey);
 
         activeCellInfo = { dateStr, mainCat, midCat, subCatKey };
-        const activeData = data || { subCat: subCatKey, song: '', content: '', startTime: '', endTime: '', isNgDay: false };
+        const activeData = data || { subCat: subCatKey, location: '', song: '', content: '', startTime: '', endTime: '', isNgDay: false };
 
         document.getElementById('input-date-edit').value = dateStr;
         document.getElementById('input-start-time').value = activeData.startTime || '';
@@ -1113,6 +1121,7 @@
         document.getElementById('group-edit-cat-label').classList.remove('hidden');
 
         document.getElementById('input-sub-cat-edit').value = activeData.subCat || '';
+        document.getElementById('input-location-edit').value = activeData.location || '';
         document.getElementById('chk-is-ng-day').checked = !!activeData.isNgDay;
 
         let songArray = [];
@@ -1269,6 +1278,7 @@
         }
 
         const subCat = document.getElementById('input-sub-cat-edit').value.trim();
+        const location = document.getElementById('input-location-edit').value.trim();
         const isNgDay = document.getElementById('chk-is-ng-day').checked;
         
         const songInputs = document.querySelectorAll('.input-song-item');
@@ -1291,12 +1301,12 @@
 
         const { exactKey } = findScheduleData(dateStr, mainCat, midCat, subCatKey);
 
-        if (subCat || song || content || startTime || isNgDay) {
+        if (subCat || location || song || content || startTime || isNgDay) {
             delete schedules[exactKey];
 
             targetDates.forEach(dStr => {
                 const newKey = `${dStr}_${mainCat}_${midCat}_${subCat}`;
-                schedules[newKey] = { subCat, song, content, startTime, endTime, isNgDay };
+                schedules[newKey] = { subCat, location, song, content, startTime, endTime, isNgDay };
             });
 
             if (finalDateStr !== dateStr) {
