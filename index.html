@@ -449,13 +449,13 @@
             </div>
             <div class="form-group">
                 <label>小分類（項目名）</label>
-                <input type="text" id="input-sub-cat-edit" list="datalist-sub-cats" placeholder="例: 新宿LOFTワンマン、個人練習、ミーティングなど">
+                <input type="text" id="input-sub-cat-edit" list="datalist-sub-cats" placeholder="例: 8/16向け/パートアレンジ/個人練/RECなど 空欄でもOK">
                 <datalist id="datalist-sub-cats"></datalist>
             </div>
 
             <div class="form-group">
                 <label>場所</label>
-                <input type="text" id="input-location-edit" placeholder="例: 新宿LOFT、スタジオノア、会議室Aなど">
+                <input type="text" id="input-location-edit" placeholder="例: ゴンスタA/finesound天神E など※空欄でもOK">
             </div>
             
             <div class="form-group">
@@ -981,10 +981,10 @@
         document.getElementById('view-time').innerText = tStr;
 
         document.getElementById('view-category').innerText = `${mainCat} ＞ ${midCat}`;
-        document.getElementById('view-sub-cat').innerText = activeData.isNgDay ? 'NG枠（終日不可）' : (activeData.subCat || '未設定（空欄）');
-        document.getElementById('view-location').innerText = activeData.location || '記載なし';
-        document.getElementById('view-song').innerText = activeData.song || '記載なし';
-        document.getElementById('view-content').innerText = activeData.content || '記載なし';
+        document.getElementById('view-sub-cat').innerText = activeData.isNgDay ? 'NG枠（終日不可）' : (activeData.subCat || '');
+        document.getElementById('view-location').innerText = activeData.location || '';
+        document.getElementById('view-song').innerText = activeData.song || '';
+        document.getElementById('view-content').innerText = activeData.content || '';
         document.getElementById('modal-detail').classList.remove('hidden');
     }
 
