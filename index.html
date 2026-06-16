@@ -526,9 +526,21 @@
     let checkedDatesGlobal = {};
 
     function findScheduleData(dateStr, mainCat, midCat, subCatKey) {
-        const keyA = `${dateStr}_${mainCat}_${midCat}_${subCatKey}`;
-        if (schedules[keyA]) return { exactKey: keyA, data: schedules[keyA] };
-        return { exactKey: keyA, data: null };
+        // 全登録データから、日付・大分類・中分類が合致するものを探索
+        const keys = Object.keys(schedules);
+        for (let key of keys) {
+            if (key.startsWith(dateStr + "_")) {
+                const parts = key.split('_');
+                const m = parts[1];
+                const d = parts[2];
+                const s = parts.slice(3).join('_') || '';
+                
+                if (m === mainCat && d === midCat && s === subCatKey) {
+                    return { exactKey: key, data: schedules[key] };
+                }
+            }
+        }
+        return { exactKey: `${dateStr}_${mainCat}_${midCat}_${subCatKey}`, data: null };
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -736,10 +748,6 @@
                         const subName = parts.slice(3).join('_');
                         if (subName) uniqueSubCats.add(subName);
                     }
-                    const item = schedules[key];
-                    if (item && item.subCat && parts[1] === cat.main && parts[2] === mid) {
-                        uniqueSubCats.add(item.subCat);
-                    }
                 });
 
                 const row = document.createElement('tr');
@@ -783,12 +791,9 @@
                             else if (cat.main === '各メンバースケジュール') cell.classList.add('has-event-member');
                             else cell.classList.add('has-event-default');
                             
-                            const timePrefix = data.startTime ? `${data.startTime}\n` : '';
-                            const locSuffix = data.location ? `\n@${data.location}` : '';
-                            // 内容詳細(content)がない場合は空文字、ある場合は改行付きで追加
                             const contentText = data.content ? `\n${data.content}` : '';
                             
-                            // タイムスタンプ、場所、内容すべてが空の場合は何も表示しない
+                            // タイムスタンプ、場所、内容すべてが完全に無い場合は空枠にする
                             if (!data.startTime && !data.location && !data.content) {
                                 cell.innerText = '';
                             } else {
@@ -845,8 +850,6 @@
                             else if (cat.main === '各メンバースケジュール') cell.classList.add('has-event-member');
                             else cell.classList.add('has-event-default');
                             
-                            const timePrefix = data.startTime ? `${data.startTime}\n` : '';
-                            const locSuffix = data.location ? `\n@${data.location}` : '';
                             const contentText = data.content ? `\n${data.content}` : '';
 
                             if (!data.startTime && !data.location && !data.content) {
@@ -860,7 +863,7 @@
                         });
                         subRow.appendChild(cell);
                     }
-                    subRow.appendChild(cell);
+                    tbody.appendChild(subRow);
                 });
             });
         });
@@ -1374,10 +1377,10 @@
             if(parts.length >= 3) {
                 let m = parts[1], d = parts[2];
                 let rest = parts.slice(3).join('_');
-                if(type === 'main' && m === m) m = newName;
+                if(type === 'main' && m === main) m = newName;
                 if(type === 'mid' && m === main && d === mid) d = newName;
                 
-                const newKey = rest ? `${parts[0]}_${m}_${d}_${rest}` : `${parts[0]}_${m}_${d}_`;
+                const newKey = rest ? `${parts[0]}_${m}_${d}_${rest}` : `${parts[0]}_${m}_${d}`;
                 schedules[newKey] = oldSchedules[key];
             } else { schedules[key] = oldSchedules[key]; }
         });
