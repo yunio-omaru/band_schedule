@@ -280,6 +280,11 @@
         .multi-date-item { background: white; border: 1px solid #ced6e0; border-radius: 4px; padding: 4px; text-align: center; font-size: 0.8rem; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .multi-date-item input { margin: 2px 0 0 0; cursor: pointer; width: auto; }
         .multi-date-item:hover { background: #e1f5fe; }
+
+        /* まとめて登録用の月切り替えタブ */
+        .multi-month-tabs { display: flex; border-bottom: 1px solid #dadce0; margin-bottom: 8px; gap: 2px; }
+        .multi-month-tab { flex: 1; padding: 6px; text-align: center; background: #f1f2f6; border: 1px solid #dadce0; border-bottom: none; border-radius: 6px 6px 0 0; font-size: 0.75rem; font-weight: bold; cursor: pointer; color: #57606f; }
+        .multi-month-tab.active { background: white; border-bottom: 2px solid white; color: #d35400; position: relative; bottom: -1px; }
     </style>
 </head>
 <body>
@@ -325,7 +330,6 @@
     </div>
 </div>
 
-<!-- 分類追加モーダル -->
 <div id="modal-menu" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>分類行（予定のベース）の追加</h2>
@@ -364,7 +368,6 @@
     </div>
 </div>
 
-<!-- 閲覧詳細モーダル -->
 <div id="modal-detail" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>予定の詳細</h2>
@@ -382,7 +385,6 @@
     </div>
 </div>
 
-<!-- カレンダー日付タップ時のモーダル -->
 <div id="modal-day-detail" class="modal-overlay hidden">
     <div class="modal-card">
         <h2 id="modal-day-label">予定一覧</h2>
@@ -394,7 +396,6 @@
     </div>
 </div>
 
-<!-- 編集・新規登録モーダル -->
 <div id="modal-edit-schedule" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>スケジュールの入力・編集</h2>
@@ -446,7 +447,8 @@
                     📅 別日もまとめて同じ内容で登録する
                 </label>
                 <div id="area-multi-date-picker" class="multi-date-selector hidden">
-                    <span style="font-size: 0.75rem; color: #666;">この月にまとめて登録したい日付にチェックを入れてください：</span>
+                    <div class="multi-month-tabs" id="multi-month-tabs-container"></div>
+                    <span style="font-size: 0.75rem; color: #666;">まとめて登録したい日付にチェックを入れてください：</span>
                     <div id="multi-date-grid-container" class="multi-date-grid"></div>
                 </div>
             </div>
@@ -462,7 +464,6 @@
     </div>
 </div>
 
-<!-- 分類名編集・削除モーダル -->
 <div id="modal-edit-category" class="modal-overlay hidden">
     <div class="modal-card">
         <h2>分類行の変更・削除</h2>
@@ -492,17 +493,14 @@
     let activeCellInfo = { dateStr: '', mainCat: '', midCat: '', subCatKey: '' }; 
     let activeCatEditInfo = { type: '', main: '', mid: '' }; 
 
+    // タブ選択中の「一括登録用対象年月」保持用変数
+    let multiDatePickerSelectedMonth = { year: 2026, month: 5 }; 
+    // 月をまたいでチェックを入れた日付のグローバル保管用オブジェクト
+    let checkedDatesGlobal = {};
+
     function findScheduleData(dateStr, mainCat, midCat, subCatKey) {
         const keyA = `${dateStr}_${mainCat}_${midCat}_${subCatKey}`;
         if (schedules[keyA]) return { exactKey: keyA, data: schedules[keyA] };
-
-        if (subCatKey === "") {
-            const prefix = `${dateStr}_${mainCat}_${midCat}_`;
-            const matchingKey = Object.keys(schedules).find(k => k.startsWith(prefix));
-            if (matchingKey && schedules[matchingKey]) {
-                return { exactKey: matchingKey, data: schedules[matchingKey] };
-            }
-        }
         return { exactKey: keyA, data: null };
     }
 
@@ -536,7 +534,17 @@
             const area = document.getElementById('area-multi-date-picker');
             if (e.target.checked) {
                 area.classList.remove('hidden');
-                generateMultiDateGrid();
+                // チェックを開いた際、グローバル管理を初期化して基準日を追加
+                checkedDatesGlobal = {};
+                const baseDate = document.getElementById('input-date-edit').value || activeCellInfo.dateStr;
+                if(baseDate) checkedDatesGlobal[baseDate] = true;
+                
+                // 基準日の月を初期表示月に設定
+                if(baseDate) {
+                    const parts = baseDate.split('-');
+                    multiDatePickerSelectedMonth = { year: parseInt(parts[0],10), month: parseInt(parts[1],10) - 1 };
+                }
+                generateMultiDateTabsAndGrid();
             } else {
                 area.classList.add('hidden');
             }
@@ -723,13 +731,8 @@
                         
                         const timePrefix = data.startTime ? `${data.startTime}\n` : '';
                         cell.innerText = timePrefix + (data.location || data.content || '有');
-                        
-                        const parts = exactKey.split('_');
-                        const actualSubKey = parts.slice(3).join('_') || '';
-                        cell.addEventListener('click', () => openWBSDetailModal(dateStr, cat.main, mid, actualSubKey));
-                    } else {
-                        cell.addEventListener('click', () => openWBSDetailModal(dateStr, cat.main, mid, ''));
                     }
+                    cell.addEventListener('click', () => openWBSDetailModal(dateStr, cat.main, mid, ''));
                     row.appendChild(cell);
                 }
                 tbody.appendChild(row);
@@ -888,11 +891,9 @@
 
     function openWBSDetailModal(dateStr, mainCat, midCat, subCatKey) {
         const { exactKey, data } = findScheduleData(dateStr, mainCat, midCat, subCatKey);
-        const parts = exactKey.split('_');
-        const resolvedSubKey = parts.slice(3).join('_') || '';
         
-        activeCellInfo = { dateStr, mainCat, midCat, subCatKey: resolvedSubKey };
-        const activeData = data || { subCat: resolvedSubKey, location: '', song: '', content: '', startTime: '', endTime: '' };
+        activeCellInfo = { dateStr, mainCat, midCat, subCatKey };
+        const activeData = data || { subCat: subCatKey, location: '', song: '', content: '', startTime: '', endTime: '' };
 
         document.getElementById('view-date').innerText = dateStr.replace(/-/g, '/');
         const tStr = activeData.startTime ? `${activeData.startTime} ～ ${activeData.endTime || '未設定'}` : '終日予定';
@@ -993,7 +994,6 @@
         document.getElementById('input-start-time').value = '';
         document.getElementById('input-end-time').value = '';
         
-        // 🛠️ カレンダー側からの新規追加でも、日付変更と別日登録の枠を確実に表示する
         document.getElementById('group-edit-date').classList.remove('hidden');
         document.getElementById('group-multi-date-wrapper').classList.remove('hidden');
         
@@ -1017,13 +1017,20 @@
         activeCellInfo.subCatKey = ''; 
 
         document.getElementById('input-date-edit').onchange = function() {
-            if (document.getElementById('chk-multi-date').checked) generateMultiDateGrid();
+            if (document.getElementById('chk-multi-date').checked) {
+                // 日付が直接変わった場合は選択グローバル初期化
+                checkedDatesGlobal = {};
+                if(this.value) checkedDatesGlobal[this.value] = true;
+                const parts = this.value.split('-');
+                multiDatePickerSelectedMonth = { year: parseInt(parts[0],10), month: parseInt(parts[1],10) - 1 };
+                generateMultiDateTabsAndGrid();
+            }
         };
 
         catSelect.onchange = function() {
             const parts = this.value.split('___');
             setupSubCatDatalist(parts[0], parts[1]);
-            if (document.getElementById('chk-multi-date').checked) generateMultiDateGrid();
+            if (document.getElementById('chk-multi-date').checked) generateMultiDateTabsAndGrid();
         };
         if(catSelect.value) {
             const parts = catSelect.value.split('___');
@@ -1032,18 +1039,15 @@
     }
 
     function openDirectEditForm(dateStr, mainCat, midCat, subCatKey) {
-        const { exactKey, data } = findScheduleData(dateStr, mainCat, midCat, subCatKey);
-        const parts = exactKey.split('_');
-        const resolvedSubKey = parts.slice(3).join('_') || '';
+        const { data } = findScheduleData(dateStr, mainCat, midCat, subCatKey);
 
-        activeCellInfo = { dateStr, mainCat, midCat, subCatKey: resolvedSubKey };
-        const activeData = data || { subCat: resolvedSubKey, location: '', song: '', content: '', startTime: '', endTime: '' };
+        activeCellInfo = { dateStr, mainCat, midCat, subCatKey };
+        const activeData = data || { subCat: subCatKey, location: '', song: '', content: '', startTime: '', endTime: '' };
 
         document.getElementById('input-date-edit').value = dateStr;
         document.getElementById('input-start-time').value = activeData.startTime || '';
         document.getElementById('input-end-time').value = activeData.endTime || '';
 
-        // 🛠️ 念のためここでも表示状態をリセットして確実に出す
         document.getElementById('group-edit-date').classList.remove('hidden');
         document.getElementById('group-multi-date-wrapper').classList.remove('hidden');
 
@@ -1070,41 +1074,94 @@
         setupLocationAndSongDatalist();
 
         document.getElementById('input-date-edit').onchange = function() {
-            if (document.getElementById('chk-multi-date').checked) generateMultiDateGrid();
+            if (document.getElementById('chk-multi-date').checked) {
+                checkedDatesGlobal = {};
+                if(this.value) checkedDatesGlobal[this.value] = true;
+                const parts = this.value.split('-');
+                multiDatePickerSelectedMonth = { year: parseInt(parts[0],10), month: parseInt(parts[1],10) - 1 };
+                generateMultiDateTabsAndGrid();
+            }
         };
 
         document.getElementById('modal-edit-schedule').classList.remove('hidden');
     }
 
-    function generateMultiDateGrid() {
-        const container = document.getElementById('multi-date-grid-container');
-        container.innerHTML = '';
+    // ★ 修正・拡張：前月・今月・次月を切り替えて一括チェックできる関数
+    function generateMultiDateTabsAndGrid() {
+        const tabsContainer = document.getElementById('multi-month-tabs-container');
+        const gridContainer = document.getElementById('multi-date-grid-container');
+        tabsContainer.innerHTML = '';
+        gridContainer.innerHTML = '';
 
         const currentDateValue = document.getElementById('input-date-edit').value || activeCellInfo.dateStr;
         if (!currentDateValue) return;
 
         const parts = currentDateValue.split('-');
-        const year = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10) - 1;
+        const baseYear = parseInt(parts[0], 10);
+        const baseMonth = parseInt(parts[1], 10) - 1; // 0-11
         const baseDay = parseInt(parts[2], 10);
 
-        const totalDays = new Date(year, month + 1, 0).getDate();
+        // 前月・今月・次月の3つのDateオブジェクトを作成
+        const monthsOpt = [
+            new Date(baseYear, baseMonth - 1, 1),
+            new Date(baseYear, baseMonth, 1),
+            new Date(baseYear, baseMonth + 1, 1)
+        ];
+
+        // 1. タブメニューの描画
+        monthsOpt.forEach(d => {
+            const y = d.getFullYear();
+            const m = d.getMonth();
+            const tab = document.createElement('div');
+            tab.className = 'multi-month-tab';
+            if (multiDatePickerSelectedMonth.year === y && multiDatePickerSelectedMonth.month === m) {
+                tab.classList.add('active');
+            }
+            tab.innerText = `${y}年${m + 1}月`;
+            tab.addEventListener('click', () => {
+                multiDatePickerSelectedMonth = { year: y, month: m };
+                generateMultiDateTabsAndGrid();
+            });
+            tabsContainer.appendChild(tab);
+        });
+
+        // 2. 選択されている月のグリッドを描画
+        const targetYear = multiDatePickerSelectedMonth.year;
+        const targetMonth = multiDatePickerSelectedMonth.month;
+        const totalDays = new Date(targetYear, targetMonth + 1, 0).getDate();
 
         for (let d = 1; d <= totalDays; d++) {
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const dateStr = `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
             const label = document.createElement('label');
             label.className = 'multi-date-item';
             
-            if (d === baseDay) {
+            // 完全に基準日そのものだった場合はグレーアウトで選択固定
+            const isBaseDate = (targetYear === baseYear && targetMonth === baseMonth && d === baseDay);
+            if (isBaseDate) {
                 label.style.background = '#e0e0e0';
                 label.style.cursor = 'not-allowed';
             }
 
+            const isChecked = checkedDatesGlobal[dateStr] || isBaseDate;
+
             label.innerHTML = `
                 <span>${d}日</span>
-                <input type="checkbox" class="cb-target-multidate" value="${dateStr}" ${d === baseDay ? 'checked disabled' : ''}>
+                <input type="checkbox" class="cb-target-multidate" value="${dateStr}" ${isChecked ? 'checked' : ''} ${isBaseDate ? 'disabled' : ''}>
             `;
-            container.appendChild(label);
+
+            // チェックボックスの状態変化をグローバル配列へ即時反映
+            const checkbox = label.querySelector('input');
+            if (!isBaseDate) {
+                checkbox.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        checkedDatesGlobal[dateStr] = true;
+                    } else {
+                        delete checkedDatesGlobal[dateStr];
+                    }
+                });
+            }
+
+            gridContainer.appendChild(label);
         }
     }
 
@@ -1203,13 +1260,12 @@
 
         const finalDateStr = document.getElementById('input-date-edit').value || dateStr;
         const isMultiDate = document.getElementById('chk-multi-date').checked;
+        
+        // ★ 修正：グローバル管理（月またぎ対応）から選択されたすべての日付を取得
         let targetDates = [finalDateStr];
-
         if (isMultiDate) {
-            const checkedBoxes = document.querySelectorAll('.cb-target-multidate:checked');
-            const boxesDates = Array.from(checkedBoxes).map(cb => cb.value);
-            if (!boxesDates.includes(finalDateStr)) boxesDates.push(finalDateStr);
-            targetDates = boxesDates;
+            targetDates = Object.keys(checkedDatesGlobal);
+            if (!targetDates.includes(finalDateStr)) targetDates.push(finalDateStr);
         }
 
         const { exactKey } = findScheduleData(dateStr, mainCat, midCat, subCatKey);
