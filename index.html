@@ -174,7 +174,8 @@
 
         table.wbs-table td.cell-day {
             cursor: pointer; transition: all 0.15s ease-in-out; font-size: 0.72rem;
-            white-space: pre-wrap; word-break: break-all; max-width: 50px; background: #ffffff; position: relative;
+            white-space: pre-wrap; word-break: break-all; max-width: 80px; background: #ffffff; position: relative;
+            line-height: 1.3;
         }
         table.wbs-table td.cell-day:hover { 
             background: #fffdf0 !important; box-shadow: 0 0 10px rgba(0, 0, 0, 0.25); 
@@ -719,6 +720,7 @@
 
         tbody.innerHTML = '';
         categories.forEach(cat => {
+            // 大分類のメイン行
             const catRow = document.createElement('tr');
             catRow.className = 'category-row';
             if (cat.main === 'イベント') catRow.classList.add('category-event');
@@ -771,6 +773,7 @@
             }
             tbody.appendChild(catRow);
 
+            // 中分類サブ項目（小項目）のループ出力
             cat.mids.forEach(mid => {
                 const row = document.createElement('tr');
                 if (isDone) row.className = 'row-done';
@@ -808,10 +811,32 @@
                             else if (cat.main === '各メンバースケジュール') cell.classList.add('has-event-member');
                             else cell.classList.add('has-event-default');
 
-                            let displayTxt = "";
-                            if (data.startTime) displayTxt += data.startTime + "\n";
-                            if (data.subCat) displayTxt += data.subCat;
-                            cell.innerText = displayTxt || "●";
+                            // 【ルール指定に基づき修正】時間、場所、内容詳細を改行区切りで表示
+                            let displayParts = [];
+                            
+                            // 1. 時間 (h:mm～h:mm 表示)
+                            if (data.startTime) {
+                                let timeStr = data.startTime;
+                                if (data.endTime) {
+                                    timeStr += `～${data.endTime}`;
+                                }
+                                displayParts.push(timeStr);
+                            }
+                            
+                            // 2. 場所
+                            if (data.location) {
+                                displayParts.push(data.location);
+                            }
+                            
+                            // 3. 内容詳細
+                            if (data.content) {
+                                displayParts.push(data.content);
+                            } else if (!data.startTime && !data.location && data.subCat) {
+                                // 時間・場所も内容詳細もなく、小分類名のみある場合のフォールバック
+                                displayParts.push(data.subCat);
+                            }
+
+                            cell.innerText = displayParts.join("\n") || "●";
                         }
                     }
 
@@ -905,7 +930,6 @@
         }
     }
 
-    // 【★修正箇所】スマホのカレンダーに一律「予定あり」ではなく、詳細を出すように変更
     function appendCalendarBadges(dateStr, container) {
         Object.keys(schedules).forEach(key => {
             if (key.startsWith(dateStr + "_")) {
@@ -929,7 +953,6 @@
                     badge.innerText = `🚫[${midCat}]不可`;
                     badge.style.opacity = "0.6";
                 } else {
-                    // バッジに「時間」「中分類」「小分類」をスマートに組み合わせて表示
                     let timePrefix = data.startTime ? `[${data.startTime}] ` : "";
                     let itemText = data.subCat ? data.subCat : midCat; 
                     badge.innerText = `${timePrefix}${midCat}:${itemText}`;
