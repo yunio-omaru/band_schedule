@@ -188,7 +188,7 @@
         table.wbs-table td.cell-day.has-event-member { background: var(--bg-member-cell) !important; color: var(--text-member-cell); font-weight: bold; }
         table.wbs-table td.cell-day.has-event-default { background: var(--bg-default-cell) !important; color: var(--text-default-cell); font-weight: bold; }
 
-        /* 各メンバースケジュールでNG（終日不可）だった場合のグレーアウトスタイル */
+        /* NG（終日不可）だった場合のグレーアウトスタイル */
         table.wbs-table td.cell-day.has-event-member-ng {
             background: #e4e7eb !important; 
             color: #7f8c8d !important;      
@@ -421,6 +421,14 @@
                 <input type="date" id="input-date-edit">
             </div>
 
+            <div class="form-group" id="group-is-ng-day" style="background: #fff0f0; padding: 10px; border-radius: 6px; border: 1px solid #fcc;">
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: bold; color: #c0392b;">
+                    <input type="checkbox" id="chk-is-ng-day" style="width: auto; transform: scale(1.3);">
+                    🚫 この日は終日不可（NG日設定）
+                </label>
+                <span style="font-size: 0.72rem; color: #7f8c8d; display: block; margin-top: 4px; font-weight: normal;">チェックを入れると、WBSのメイン行該当マスがグレーアウト表示になります。</span>
+            </div>
+
             <div class="form-group">
                 <label>時間（空欄の場合は終日扱い）</label>
                 <div class="time-range-group">
@@ -440,7 +448,7 @@
             </div>
             <div class="form-group">
                 <label>小分類（項目名）</label>
-                <input type="text" id="input-sub-cat-edit" list="datalist-sub-cats" placeholder="例: 新宿LOFTワンマン、新曲Aレコーディング、NG枠など">
+                <input type="text" id="input-sub-cat-edit" list="datalist-sub-cats" placeholder="例: 新宿LOFTワンマン、個人練習、ミーティングなど">
                 <datalist id="datalist-sub-cats"></datalist>
             </div>
             
@@ -759,86 +767,83 @@
                     const { exactKey, data } = findScheduleData(dateStr, cat.main, mid, "");
                     
                     if (data) {
-                        if (cat.main === '各メンバースケジュール') {
-                            // 各メンバースケジュールは同行をグレーアウトして「終日不可」と表示
+                        if (data.isNgDay) {
+                            // NG日（終日不可）チェックボックスがONの場合は最優先でグレーアウト表示
                             cell.classList.add('has-event-member-ng');
                             cell.innerText = "終日不可";
                         } else {
                             if (cat.main === 'イベント') cell.classList.add('has-event-live');
                             else if (cat.main === '楽曲制作') cell.classList.add('has-event-music');
                             else if (cat.main === 'SNS') cell.classList.add('has-event-sns');
+                            else if (cat.main === '各メンバースケジュール') cell.classList.add('has-event-member');
                             else cell.classList.add('has-event-default');
                             
                             const timePrefix = data.startTime ? `${data.startTime}\n` : '';
-                            cell.innerText = timePrefix + (data.content || '有');
+                            const locSuffix = data.location ? `\n@${data.location}` : '';
+                            cell.innerText = timePrefix + (data.content || '有') + locSuffix;
                         }
                     }
-                    // ★ 各メンバースケジュールの場合は直接編集画面へ
                     cell.addEventListener('click', () => {
-                        if (cat.main === '各メンバースケジュール') {
-                            openDirectEditForm(dateStr, cat.main, mid, '');
-                        } else {
-                            openWBSDetailModal(dateStr, cat.main, mid, '');
-                        }
+                        openWBSDetailModal(dateStr, cat.main, mid, '');
                     });
                     row.appendChild(cell);
                 }
                 tbody.appendChild(row);
 
-                // 各メンバースケジュール以外の場合のみ小分類（子要素行）を生成する
-                if (cat.main !== '各メンバースケジュール') {
-                    uniqueSubCats.forEach(subCatName => {
-                        const subRow = document.createElement('tr');
-                        const subRowKey = `${cat.main}_${mid}_${subCatName}`;
-                        if (doneRows.includes(subRowKey)) subRow.classList.add('row-done');
+                // 小分類（子要素行）を生成（すべての分類で有効）
+                uniqueSubCats.forEach(subCatName => {
+                    const subRow = document.createElement('tr');
+                    const subRowKey = `${cat.main}_${mid}_${subCatName}`;
+                    if (doneRows.includes(subRowKey)) subRow.classList.add('row-done');
 
-                        const tdSubDone = document.createElement('td');
-                        tdSubDone.className = 'col-done';
-                        const subChk = document.createElement('input');
-                        subChk.type = 'checkbox';
-                        subChk.className = 'wbs-checkbox';
-                        subChk.checked = doneRows.includes(subRowKey);
-                        subChk.addEventListener('change', (e) => toggleRowDone(subRowKey, e.target.checked));
-                        tdSubDone.appendChild(subChk);
-                        subRow.appendChild(tdSubDone);
-                        
-                        const tdSubMainSpace = document.createElement('td');
-                        tdSubMainSpace.className = 'col-main'; tdSubMainSpace.style.background = '#fff';
-                        
-                        const tdSubTitle = document.createElement('td');
-                        tdSubTitle.className = 'col-mid';
-                        tdSubTitle.style.fontSize = '0.8rem';
-                        tdSubTitle.style.color = '#7f8c8d';
-                        tdSubTitle.style.fontStyle = 'italic';
-                        tdSubTitle.innerText = `↳ ${subCatName}`;
-                        
-                        subRow.appendChild(tdSubMainSpace);
-                        subRow.appendChild(tdSubTitle);
+                    const tdSubDone = document.createElement('td');
+                    tdSubDone.className = 'col-done';
+                    const subChk = document.createElement('input');
+                    subChk.type = 'checkbox';
+                    subChk.className = 'wbs-checkbox';
+                    subChk.checked = doneRows.includes(subRowKey);
+                    subChk.addEventListener('change', (e) => toggleRowDone(subRowKey, e.target.checked));
+                    tdSubDone.appendChild(subChk);
+                    subRow.appendChild(tdSubDone);
+                    
+                    const tdSubMainSpace = document.createElement('td');
+                    tdSubMainSpace.className = 'col-main'; tdSubMainSpace.style.background = '#fff';
+                    
+                    const tdSubTitle = document.createElement('td');
+                    tdSubTitle.className = 'col-mid';
+                    tdSubTitle.style.fontSize = '0.8rem';
+                    tdSubTitle.style.color = '#7f8c8d';
+                    tdSubTitle.style.fontStyle = 'italic';
+                    tdSubTitle.innerText = `↳ ${subCatName}`;
+                    
+                    subRow.appendChild(tdSubMainSpace);
+                    subRow.appendChild(tdSubTitle);
 
-                        for (let d = 1; d <= numDays; d++) {
-                            const cell = document.createElement('td');
-                            cell.className = 'cell-day';
-                            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    for (let d = 1; d <= numDays; d++) {
+                        const cell = document.createElement('td');
+                        cell.className = 'cell-day';
+                        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                        
+                        const { data } = findScheduleData(dateStr, cat.main, mid, subCatName);
+
+                        if (data) {
+                            if (cat.main === 'イベント') cell.classList.add('has-event-live');
+                            else if (cat.main === '楽曲制作') cell.classList.add('has-event-music');
+                            else if (cat.main === 'SNS') cell.classList.add('has-event-sns');
+                            else if (cat.main === '各メンバースケジュール') cell.classList.add('has-event-member');
+                            else cell.classList.add('has-event-default');
                             
-                            const { data } = findScheduleData(dateStr, cat.main, mid, subCatName);
-
-                            if (data) {
-                                if (cat.main === 'イベント') cell.classList.add('has-event-live');
-                                else if (cat.main === '楽曲制作') cell.classList.add('has-event-music');
-                                else if (cat.main === 'SNS') cell.classList.add('has-event-sns');
-                                else cell.classList.add('has-event-default');
-                                
-                                const timePrefix = data.startTime ? `${data.startTime}\n` : '';
-                                cell.innerText = timePrefix + (data.content || '有');
-                            }
-                            cell.addEventListener('click', () => {
-                                openWBSDetailModal(dateStr, cat.main, mid, subCatName);
-                            });
-                            subRow.appendChild(cell);
+                            const timePrefix = data.startTime ? `${data.startTime}\n` : '';
+                            const locSuffix = data.location ? `\n@${data.location}` : '';
+                            cell.innerText = timePrefix + (data.content || '有') + locSuffix;
                         }
-                        tbody.appendChild(subRow);
-                    });
-                }
+                        cell.addEventListener('click', () => {
+                            openWBSDetailModal(dateStr, cat.main, mid, subCatName);
+                        });
+                        subRow.appendChild(cell);
+                    }
+                    tbody.appendChild(subRow);
+                });
             });
         });
     }
@@ -912,8 +917,8 @@
                     else badge.classList.add('badge-default');
                     
                     const timeStr = data.startTime ? `[${data.startTime}] ` : '';
-                    const subNameText = (mainCat === '各メンバースケジュール') ? '終日不可' : (data.subCat || (parts.slice(3).join('_')) || '');
-                    badge.innerText = `${timeStr}${midCat}:${subNameText || '予定'}`;
+                    const subNameText = data.isNgDay ? '終日不可' : (data.subCat || (parts.slice(3).join('_')) || '予定あり');
+                    badge.innerText = `${timeStr}${midCat}:${subNameText}`;
                     badgesContainer.appendChild(badge);
                 }
             }
@@ -947,14 +952,14 @@
         const { exactKey, data } = findScheduleData(dateStr, mainCat, midCat, subCatKey);
         
         activeCellInfo = { dateStr, mainCat, midCat, subCatKey };
-        const activeData = data || { subCat: subCatKey, song: '', content: '', startTime: '', endTime: '' };
+        const activeData = data || { subCat: subCatKey, song: '', content: '', startTime: '', endTime: '', isNgDay: false };
 
         document.getElementById('view-date').innerText = dateStr.replace(/-/g, '/');
-        const tStr = activeData.startTime ? `${activeData.startTime} ～ ${activeData.endTime || '未設定'}` : '終日予定';
+        const tStr = activeData.isNgDay ? '終日不可（NG日）' : (activeData.startTime ? `${activeData.startTime} ～ ${activeData.endTime || '未設定'}` : '終日予定');
         document.getElementById('view-time').innerText = tStr;
 
         document.getElementById('view-category').innerText = `${mainCat} ＞ ${midCat}`;
-        document.getElementById('view-sub-cat').innerText = activeData.subCat || '未設定（空欄）';
+        document.getElementById('view-sub-cat').innerText = activeData.isNgDay ? 'NG枠（終日不可）' : (activeData.subCat || '未設定（空欄）');
         document.getElementById('view-song').innerText = activeData.song || '記載なし';
         document.getElementById('view-content').innerText = activeData.content || '記載なし';
         document.getElementById('modal-detail').classList.remove('hidden');
@@ -992,19 +997,19 @@
                     else if (main === 'SNS') tagClass = 'badge-sns';
                     else if (main === '各メンバースケジュール') tagClass = 'badge-member';
 
-                    const timeDisplay = data.startTime ? `⏰ 時間: ${data.startTime}～${data.endTime || ''}` : '⏰ 終日';
-                    const displaySubCat = (main === '各メンバースケジュール') ? '終日不可' : (data.subCat || subKey || '未設定');
+                    const timeDisplay = data.isNgDay ? '⏰ 終日不可' : (data.startTime ? `⏰ 時間: ${data.startTime}～${data.endTime || ''}` : '⏰ 終日');
+                    const displaySubCat = data.isNgDay ? '終日不可設定' : (data.subCat || subKey || '未設定');
 
                     div.innerHTML = `
                         <span class="item-category-tag ${tagClass}">${main} ＞ ${mid}</span>
-                        <div class="item-title">📍 ${main === '各メンバースケジュール' ? '状態' : '小分類'}: ${displaySubCat}</div>
+                        <div class="item-title">📍 小分類: ${displaySubCat}</div>
                         <div style="font-size:0.78rem; color:#d35400; font-weight:bold; margin-bottom: 4px;">${timeDisplay}</div>
                         <div style="font-size:0.75rem; color:#555;">
                             ${data.song ? ` 🎵 楽曲: ${data.song}` : ''}
                         </div>
                         ${data.content ? `<div style="font-size:0.75rem; margin-top:6px; color:#333; background:#fff; padding:6px; border-radius:4px; border:1px solid #e0e0e0; white-space:pre-wrap;">${data.content}</div>` : ''}
                         <div style="text-align: right; margin-top: 8px;">
-                            <button type="button" style="padding:4px 10px; font-size:0.75rem;" onclick="closeModalAndEdit('${dateStr}','${main}','${mid}','${(main === '各メンバースケジュール' ? '' : subKey).replace(/'/g, "\\'")}')">✏️ 編集/削除</button>
+                            <button type="button" style="padding:4px 10px; font-size:0.75rem;" onclick="closeModalAndEdit('${dateStr}','${main}','${mid}','${subKey.replace(/'/g, "\\'")}')">✏️ 編集/削除</button>
                         </div>
                     `;
                     listContainer.appendChild(div);
@@ -1054,6 +1059,7 @@
         document.getElementById('group-edit-cat-label').classList.add('hidden');
 
         document.getElementById('input-sub-cat-edit').value = '';
+        document.getElementById('chk-is-ng-day').checked = false;
         
         setSongInputs([]);
         document.getElementById('input-content').value = '';
@@ -1090,12 +1096,10 @@
     }
 
     function openDirectEditForm(dateStr, mainCat, midCat, subCatKey) {
-        // 各メンバースケジュールの場合は強制的にsubCatを空としてデータを引き当てる
-        const targetSubKey = (mainCat === '各メンバースケジュール') ? '' : subCatKey;
-        const { data } = findScheduleData(dateStr, mainCat, midCat, targetSubKey);
+        const { data } = findScheduleData(dateStr, mainCat, midCat, subCatKey);
 
-        activeCellInfo = { dateStr, mainCat, midCat, subCatKey: targetSubKey };
-        const activeData = data || { subCat: targetSubKey, song: '', content: '', startTime: '', endTime: '' };
+        activeCellInfo = { dateStr, mainCat, midCat, subCatKey };
+        const activeData = data || { subCat: subCatKey, song: '', content: '', startTime: '', endTime: '', isNgDay: false };
 
         document.getElementById('input-date-edit').value = dateStr;
         document.getElementById('input-start-time').value = activeData.startTime || '';
@@ -1108,8 +1112,9 @@
         document.getElementById('group-edit-cat-select').classList.add('hidden');
         document.getElementById('group-edit-cat-label').classList.remove('hidden');
 
-        document.getElementById('input-sub-cat-edit').value = (mainCat === '各メンバースケジュール') ? 'NG枠' : (activeData.subCat || '');
-        
+        document.getElementById('input-sub-cat-edit').value = activeData.subCat || '';
+        document.getElementById('chk-is-ng-day').checked = !!activeData.isNgDay;
+
         let songArray = [];
         if (activeData.song) {
             songArray = activeData.song.split(/[,\n、]/).map(s => s.trim()).filter(s => s !== "");
@@ -1264,6 +1269,7 @@
         }
 
         const subCat = document.getElementById('input-sub-cat-edit').value.trim();
+        const isNgDay = document.getElementById('chk-is-ng-day').checked;
         
         const songInputs = document.querySelectorAll('.input-song-item');
         const songVals = [];
@@ -1285,14 +1291,12 @@
 
         const { exactKey } = findScheduleData(dateStr, mainCat, midCat, subCatKey);
 
-        if (subCat || song || content || startTime) {
+        if (subCat || song || content || startTime || isNgDay) {
             delete schedules[exactKey];
 
             targetDates.forEach(dStr => {
-                // 各メンバースケジュールの場合は subCat を空文字にして親の同行に保存する
-                const finalSubCat = (mainCat === '各メンバースケジュール') ? '' : subCat;
-                const newKey = `${dStr}_${mainCat}_${midCat}_${finalSubCat}`;
-                schedules[newKey] = { subCat: finalSubCat, song, content, startTime, endTime };
+                const newKey = `${dStr}_${mainCat}_${midCat}_${subCat}`;
+                schedules[newKey] = { subCat, song, content, startTime, endTime, isNgDay };
             });
 
             if (finalDateStr !== dateStr) {
@@ -1303,8 +1307,7 @@
             delete schedules[exactKey];
             if (isMultiDate) {
                 targetDates.forEach(dStr => {
-                    const finalSubCat = (mainCat === '各メンバースケジュール') ? '' : subCat;
-                    const { exactKey: loopKey } = findScheduleData(dStr, mainCat, midCat, finalSubCat);
+                    const { exactKey: loopKey } = findScheduleData(dStr, mainCat, midCat, subCat);
                     delete schedules[loopKey];
                 });
             }
@@ -1347,7 +1350,7 @@
             if(parts.length >= 3) {
                 let m = parts[1], d = parts[2];
                 let rest = parts.slice(3).join('_');
-                if(type === 'main' && m === main) m = newName;
+                if(type === 'main' && m === m) m = newName;
                 if(type === 'mid' && m === main && d === mid) d = newName;
                 
                 const newKey = rest ? `${parts[0]}_${m}_${d}_${rest}` : `${parts[0]}_${m}_${d}_`;
