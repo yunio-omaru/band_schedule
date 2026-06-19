@@ -35,7 +35,7 @@
             --bg-default-cell: #f8f9fa;
             --text-default-cell: #2f3640;
         }
-        * { box-sizing: border-box; }
+        * { box-spacing: border-box; }
         body {
             font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif;
             background-color: var(--bg-color);
@@ -242,7 +242,7 @@
         .event-badges-container { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
         .day-badge {
             font-size: 0.58rem; color: white; padding: 1px 2px; border-radius: 2px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: bold;
+            white-space: pre-wrap; word-break: break-all; font-weight: bold; line-height: 1.2;
         }
         .badge-event { background-color: var(--bg-event-main); }
         .badge-music { background-color: var(--bg-music-main); }
@@ -721,7 +721,6 @@
 
         tbody.innerHTML = '';
         categories.forEach(cat => {
-            // 大分類のメイン行
             const catRow = document.createElement('tr');
             catRow.className = 'category-row';
             if (cat.main === 'イベント') catRow.classList.add('category-event');
@@ -774,9 +773,7 @@
             }
             tbody.appendChild(catRow);
 
-            // 中分類項目のループ出力
             cat.mids.forEach(mid => {
-                // 先にこの「大分類・中分類」配下にある全予定データから、入力されている一意の「小分類名（subCat）」を集める
                 const uniqueSubCats = new Set();
                 Object.keys(schedules).forEach(key => {
                     const parts = key.split('_');
@@ -792,7 +789,6 @@
                     }
                 });
 
-                // 1. 中分類のベース行をレンダリング
                 const row = document.createElement('tr');
                 if (isDone) row.className = 'row-done';
 
@@ -811,7 +807,6 @@
                 tdMid.addEventListener('click', () => openEditCategoryModal('mid', cat.main, mid));
                 row.appendChild(tdMid);
 
-                // 中分類ベース行の日付マス (小分類キーが空欄 "" のデータ)
                 for (let day = 1; day <= numDays; day++) {
                     const cell = document.createElement('td');
                     cell.className = 'cell-day';
@@ -829,28 +824,23 @@
                 }
                 tbody.appendChild(row);
 
-                // 2. 自動検出された小分類（子要素）の行を直下に展開レンダリング
                 uniqueSubCats.forEach(subCatName => {
                     const subRow = document.createElement('tr');
                     if (isDone) subRow.className = 'row-done';
 
-                    // チェックボックス列と大分類列は空欄
                     const tdSubDone = document.createElement('td'); tdSubDone.className = 'col-fixed'; subRow.appendChild(tdSubDone);
                     const tdSubM = document.createElement('td'); tdSubM.className = 'col-fixed'; subRow.appendChild(tdSubM);
 
-                    // 中分類名称エリアに「↳ 小分類名」を表示
                     const tdSubLabel = document.createElement('td');
                     tdSubLabel.className = 'col-sub col-fixed';
                     tdSubLabel.innerText = `↳ ${subCatName}`;
                     subRow.appendChild(tdSubLabel);
 
-                    // 小分類行の各日付マス
                     for (let day = 1; day <= numDays; day++) {
                         const cell = document.createElement('td');
                         cell.className = 'cell-day';
                         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-                        // 小分類の文字列自体をキーの識別子として扱う
                         const { exactKey, data } = findScheduleData(dateStr, cat.main, mid, subCatName);
                         renderCellTextAndStyle(cell, data, cat.main);
 
@@ -858,7 +848,6 @@
                             activeCellInfo = { dateStr, mainCat: cat.main, midCat: mid, subCatKey: subCatName };
                             if (data) showScheduleDetail(data);
                             else {
-                                // 新規作成時、あらかじめ小分類名が入力された状態でフォームを開く
                                 openEditScheduleModal(dateStr, cat.main, mid, subCatName);
                                 document.getElementById('input-sub-cat-edit').value = subCatName;
                             }
@@ -871,7 +860,6 @@
         });
     }
 
-    // セル内のテキスト表記およびスタイル定義（共通化）
     function renderCellTextAndStyle(cell, data, mainCat) {
         if (!data) return;
 
@@ -885,10 +873,8 @@
             else if (mainCat === '各メンバースケジュール') cell.classList.add('has-event-member');
             else cell.classList.add('has-event-default');
 
-            // 表示ルール: 時間、場所、内容詳細を改行区切りで表示
             let displayParts = [];
             
-            // 1. 時間 (h:mm～h:mm 表示)
             if (data.startTime) {
                 let timeStr = data.startTime;
                 if (data.endTime) {
@@ -897,16 +883,13 @@
                 displayParts.push(timeStr);
             }
             
-            // 2. 場所
             if (data.location) {
                 displayParts.push(data.location);
             }
             
-            // 3. 内容詳細
             if (data.content) {
                 displayParts.push(data.content);
             } else if (!data.startTime && !data.location && data.subCat) {
-                // 時間・場所も内容詳細も未記入で、小分類名のみが存在する場合のフォールバック
                 displayParts.push(data.subCat);
             }
 
@@ -930,7 +913,6 @@
         const numDays = new Date(year, month + 1, 0).getDate();
         const prevNumDays = new Date(year, month, 0).getDate();
 
-        // 前月の残りマス
         for (let i = firstDayIdx - 1; i >= 0; i--) {
             const d = prevNumDays - i;
             const pm = month === 0 ? 11 : month - 1;
@@ -950,7 +932,6 @@
             gridBody.appendChild(dayCell);
         }
 
-        // 当月のマス
         for (let d = 1; d <= numDays; d++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
             
@@ -967,7 +948,6 @@
             gridBody.appendChild(dayCell);
         }
 
-        // 翌月のハミ出しマス
         const totalCellsSoFar = firstDayIdx + numDays;
         const remainingCells = (7 - (totalCellsSoFar % 7)) % 7;
         for (let d = 1; d <= remainingCells; d++) {
@@ -1009,10 +989,9 @@
                 badge.className = `day-badge ${badgeClass}`;
 
                 if (data.isNgDay) {
-                    badge.innerText = `🚫[${midCat}]不可`;
+                    badge.innerText = `🚫[${midCat}]\n不可`;
                     badge.style.opacity = "0.6";
                 } else {
-                    // 全項目（開始時間、場所、内容詳細/小分類）が空欄の場合は「予定あり」
                     const hasStartTime = !!data.startTime;
                     const hasLocation = !!data.location;
                     const detailText = data.content || data.subCat || "";
@@ -1021,16 +1000,20 @@
                     if (!hasStartTime && !hasLocation && !hasDetail) {
                         badge.innerText = "予定あり";
                     } else {
-                        let timeStr = hasStartTime ? `[${data.startTime}]` : "";
-                        let locStr = hasLocation ? data.location : "";
-                        let detailStr = hasDetail ? detailText : "";
-
-                        // 時間しか入っていない場合はセパレータのコロンを出さない
-                        if (!locStr && !detailStr) {
-                            badge.innerText = timeStr;
-                        } else {
-                            badge.innerText = `${timeStr}${locStr}:${detailStr}`;
+                        // 横に繋げず、配列に格納して改行（\n）で結合する形に修正
+                        let badgeLines = [];
+                        
+                        if (hasStartTime) {
+                            badgeLines.push(`[${data.startTime}]`);
                         }
+                        if (hasLocation) {
+                            badgeLines.push(data.location);
+                        }
+                        if (hasDetail) {
+                            badgeLines.push(detailText);
+                        }
+
+                        badge.innerText = badgeLines.join("\n");
                     }
                 }
                 container.appendChild(badge);
@@ -1326,7 +1309,6 @@
             input.value = song;
             input.placeholder = idx === 0 ? "例: 楽曲A (空欄可)" : "＋ さらに追加楽曲があれば入力";
             
-            // プロパティと属性の両方でdatalistを確実に紐付け
             input.list = "datalist-songs";
             input.setAttribute('list', 'datalist-songs');
             
@@ -1411,7 +1393,6 @@
                 if(baseD) targetDates.push(baseD);
             }
             targetDates.forEach(dStr => {
-                // 小分類(subCat)がある場合は、それをキー識別子として登録
                 const targetSubKey = subCat || subCatKey;
                 const { exactKey } = findScheduleData(dStr, mainCat, midCat, targetSubKey);
                 schedules[exactKey] = payload;
