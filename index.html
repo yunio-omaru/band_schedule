@@ -1308,7 +1308,11 @@
             input.type = 'text';
             input.value = song;
             input.placeholder = idx === 0 ? "例: 楽曲A (空欄可)" : "＋ さらに追加楽曲があれば入力";
+            
+            // プロパティと属性の両方でdatalistを確実に紐付け
+            input.list = "datalist-songs";
             input.setAttribute('list', 'datalist-songs');
+            
             input.addEventListener('input', () => {
                 if (idx === arr.length - 1 && input.value.trim() !== "") {
                     renderSongInputs([...getActiveSongsFromUI(), ""]);
