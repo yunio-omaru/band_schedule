@@ -1012,9 +1012,26 @@
                     badge.innerText = `🚫[${midCat}]不可`;
                     badge.style.opacity = "0.6";
                 } else {
-                    let timePrefix = data.startTime ? `[${data.startTime}] ` : "";
-                    let itemText = data.subCat ? data.subCat : midCat; 
-                    badge.innerText = `${timePrefix}${midCat}:${itemText}`;
+                    // 全項目（開始時間、場所、内容詳細/小分類）が空欄の場合は「予定あり」
+                    const hasStartTime = !!data.startTime;
+                    const hasLocation = !!data.location;
+                    const detailText = data.content || data.subCat || "";
+                    const hasDetail = !!detailText;
+
+                    if (!hasStartTime && !hasLocation && !hasDetail) {
+                        badge.innerText = "予定あり";
+                    } else {
+                        let timeStr = hasStartTime ? `[${data.startTime}]` : "";
+                        let locStr = hasLocation ? data.location : "";
+                        let detailStr = hasDetail ? detailText : "";
+
+                        // 時間しか入っていない場合はセパレータのコロンを出さない
+                        if (!locStr && !detailStr) {
+                            badge.innerText = timeStr;
+                        } else {
+                            badge.innerText = `${timeStr}${locStr}:${detailStr}`;
+                        }
+                    }
                 }
                 container.appendChild(badge);
             }
