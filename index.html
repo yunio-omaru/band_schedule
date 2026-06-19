@@ -1298,25 +1298,7 @@
         songs.forEach(sg => { const opt = document.createElement('option'); opt.value = sg; dlSong.appendChild(opt); });
     }
 
-    function renderSongInputs(songList) {
-        const wrapper = document.getElementById('song-inputs-wrapper');
-        wrapper.innerHTML = '';
-        
-        const arr = [...songList, ""];
-        arr.forEach((song, idx) => {
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = song;
-            input.placeholder = idx === 0 ? "例: 楽曲A (空欄可)" : "＋ さらに追加楽曲があれば入力";
-            input.list = "datalist-songs";
-            input.addEventListener('input', () => {
-                if (idx === arr.length - 1 && input.value.trim() !== "") {
-                    renderSongInputs([...getActiveSongsFromUI(), ""]);
-                }
-            });
-            wrapper.appendChild(input);
-        });
-    }
+    function renderSongInputs(songList)
 
     function getActiveSongsFromUI() {
         const container = document.getElementById('song-inputs-wrapper');
